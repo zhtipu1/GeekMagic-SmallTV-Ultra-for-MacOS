@@ -1,0 +1,2730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeekMagic SmallTV-Ultra</title>
+<style>
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #0d1117;
+  --surface:   #161b22;
+  --surface2:  #21262d;
+  --surface3:  #30363d;
+  --border:    #30363d;
+  --accent:    #00d4aa;
+  --accent2:   #0099cc;
+  --accent-dim:#00d4aa22;
+  --text:      #e6edf3;
+  --text2:     #8b949e;
+  --text3:     #6e7681;
+  --danger:    #f85149;
+  --warn:      #d29922;
+  --success:   #3fb950;
+  --radius:    10px;
+  --sidebar-w: 220px;
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+html, body { height: 100%; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); display: flex; overflow: hidden; user-select: none; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ── Sidebar ── */
+#sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; }
+#logo { padding: 20px 18px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+#logo-text { display: flex; flex-direction: column; }
+#logo-title { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.3px; }
+#logo-sub { font-size: 10px; color: var(--text3); margin-top: 1px; }
+#status-bar { margin: 12px 12px 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 12px; display: flex; align-items: center; gap: 8px; font-size: 11px; }
+#status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; transition: background 0.3s; }
+#status-dot.online { background: var(--success); box-shadow: 0 0 6px var(--success); }
+#status-dot.offline { background: var(--danger); }
+#status-text { color: var(--text2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+nav { flex: 1; padding: 6px 8px; overflow-y: auto; }
+.nav-section { margin-bottom: 4px; }
+.nav-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; padding: 8px 8px 4px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--text2); transition: all 0.15s; border: 1px solid transparent; }
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent)33; }
+.nav-item svg { opacity: 0.7; flex-shrink: 0; }
+.nav-item.active svg { opacity: 1; }
+#sidebar-footer { padding: 12px; border-top: 1px solid var(--border); }
+#fw-badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 10px; color: var(--text3); }
+#fw-badge span { color: var(--text2); }
+
+/* ── Main ── */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100vh; }
+#topbar { height: 52px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 12px; background: var(--surface); flex-shrink: 0; }
+#page-title { font-size: 15px; font-weight: 600; flex: 1; }
+.topbar-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 6px 12px; font-size: 12px; color: var(--text2); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s; font-family: var(--font); }
+.topbar-btn:hover { background: var(--surface3); color: var(--text); border-color: var(--text3); box-shadow: 0 0 12px #ffffff11; }
+.topbar-btn.danger:hover { background: #f8514922; color: var(--danger); border-color: var(--danger)44; box-shadow: 0 0 14px #f8514944; }
+.topbar-btn.accent:hover { background: #00d4aa33; color: var(--accent); border-color: var(--accent); box-shadow: 0 0 14px #00d4aa55; }
+.topbar-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+#content { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* ── Pages ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── Animated reveal for page elements ── */
+@keyframes revealUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.page.active > * { animation: revealUp 0.35s ease both; }
+.page.active > *:nth-child(1) { animation-delay: 0s; }
+.page.active > *:nth-child(2) { animation-delay: 0.05s; }
+.page.active > *:nth-child(3) { animation-delay: 0.1s; }
+.page.active > *:nth-child(4) { animation-delay: 0.15s; }
+.page.active > *:nth-child(5) { animation-delay: 0.2s; }
+.page.active > *:nth-child(n+6) { animation-delay: 0.25s; }
+
+/* ── Cards ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s; }
+.card:hover { border-color: var(--accent)55; box-shadow: 0 0 0 1px var(--accent)22, 0 8px 28px #00d4aa1f; transform: translateY(-1px); }
+.stat-card:hover { border-color: var(--accent)55; box-shadow: 0 0 0 1px var(--accent)22, 0 8px 24px #00d4aa22; transform: translateY(-1px); }
+.card-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card-title svg { opacity: 0.7; }
+
+/* ── Grid ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ── Form ── */
+label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 5px; }
+input[type=text], input[type=number], select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 8px 10px; color: var(--text); font-size: 13px; font-family: var(--font); outline: none; transition: border-color 0.15s; }
+input[type=text]:focus, input[type=number]:focus, select:focus { border-color: var(--accent); }
+select option { background: var(--surface2); }
+input[type=color] { width: 100%; height: 36px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface2); cursor: pointer; padding: 2px 4px; }
+.form-row { margin-bottom: 14px; }
+.form-row:last-child { margin-bottom: 0; }
+
+/* ── Toggle ── */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; margin-bottom: 10px; }
+.toggle-label { font-size: 13px; color: var(--text); }
+.toggle-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.toggle { position: relative; width: 38px; height: 20px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: var(--surface3); border-radius: 20px; cursor: pointer; transition: background 0.2s; }
+.toggle-slider::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: var(--text2); border-radius: 50%; transition: transform 0.2s, background 0.2s; }
+.toggle input:checked + .toggle-slider { background: #00a88a; }
+.toggle input:checked + .toggle-slider::before { transform: translateX(18px); background: #fff; }
+
+/* ── Range ── */
+.range-wrap { display: flex; align-items: center; gap: 10px; }
+input[type=range] { flex: 1; -webkit-appearance: none; height: 4px; background: var(--surface3); border-radius: 2px; outline: none; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: 0 0 6px var(--accent)66; }
+.range-val { font-size: 13px; font-weight: 600; color: var(--accent); min-width: 32px; text-align: right; }
+
+/* ── Brightness pill (vertical iOS-style slider) ── */
+.brightness-card { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.brightness-pill-stack { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 4px; }
+.brightness-pill { position: relative; width: 64px; height: 168px; border-radius: 32px; background: #14171b; border: 1px solid var(--border); overflow: hidden; cursor: pointer; user-select: none; touch-action: none; flex-shrink: 0; }
+.brightness-pill-fill { position: absolute; left: 0; right: 0; bottom: 0; height: 50%; background: #e7e9ec; transition: height 0.08s linear; }
+.brightness-pill-icon { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); color: #14171b; pointer-events: none; }
+.brightness-pill-value { font-size: 28px; font-weight: 700; color: var(--text); }
+.brightness-pill-sub { font-size: 11px; color: var(--text3); }
+
+/* ── Storage pill (horizontal) ── */
+.storage-pill { width: 100%; height: 32px; border-radius: 16px; background: #14171b; border: 1px solid var(--border); overflow: hidden; position: relative; }
+.storage-pill-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: var(--accent); transition: width 0.3s ease, background 0.3s ease; }
+.storage-pill-labels { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: var(--text2); }
+.storage-pill-labels strong { color: var(--text); font-weight: 600; }
+.storage-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.storage-dot.used { background: var(--accent); }
+.storage-dot.free { background: var(--surface3); border: 1px solid var(--border); }
+
+/* ── Buttons ── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 7px; font-size: 13px; font-family: var(--font); font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; }
+.btn-primary { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+.btn-primary:hover { background: #00bfa5; }
+.btn-secondary { background: var(--surface2); color: var(--text); border-color: var(--border); }
+.btn-secondary:hover { background: var(--surface3); }
+.btn-danger { background: #f8514922; color: var(--danger); border-color: var(--danger)44; }
+.btn-danger:hover { background: #f8514933; }
+.btn-warn { background: #d2992222; color: var(--warn); border-color: var(--warn)44; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Theme cards ── */
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.theme-card { background: var(--surface2); border: 2px solid var(--border); border-radius: var(--radius); padding: 14px 10px; text-align: center; cursor: pointer; transition: all 0.15s; font-size: 12px; color: var(--text2); }
+.theme-card:hover { border-color: var(--accent)55; color: var(--text); }
+.theme-card.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.theme-card .ti { font-size: 28px; margin-bottom: 8px; }
+.theme-card .tn { font-weight: 500; }
+.theme-grid-sm { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+.theme-card-sm { padding: 8px 6px; border-width: 1px; }
+.theme-card-sm .ti { font-size: 18px; margin-bottom: 4px; }
+.theme-card-sm .tn { font-size: 11px; }
+
+/* ── Stat cards ── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+.stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s; }
+.stat-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 22px; font-weight: 700; color: var(--text); }
+.stat-sub { font-size: 11px; color: var(--text2); margin-top: 3px; }
+
+/* ── WiFi list ── */
+.wifi-list { display: flex; flex-direction: column; gap: 6px; }
+.wifi-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 13px; }
+.wifi-item:hover { border-color: var(--accent)44; background: var(--surface3); }
+.wifi-item.connected { border-color: var(--success)66; }
+.wifi-ssid { flex: 1; font-weight: 500; }
+.wifi-signal { font-size: 11px; color: var(--text3); }
+.wifi-badge { font-size: 10px; background: var(--accent-dim); color: var(--accent); padding: 2px 7px; border-radius: 4px; }
+.wifi-badge-green { font-size: 10px; background: #3fb95022; color: var(--success); padding: 2px 7px; border-radius: 4px; }
+
+/* ── File/Album table ── */
+.file-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.file-table th { text-align: left; padding: 8px 10px; color: var(--text3); border-bottom: 1px solid var(--border); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+.file-table td { padding: 9px 10px; border-bottom: 1px solid var(--border)66; vertical-align: middle; }
+.file-table tr:last-child td { border-bottom: none; }
+.file-table tr:hover td { background: var(--surface2); }
+.file-table .col-num { width: 36px; color: var(--text3); font-size: 12px; }
+.file-table .col-name { font-family: monospace; font-size: 12px; color: var(--text); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-table .col-size { width: 80px; color: var(--text2); font-size: 12px; white-space: nowrap; }
+.file-table .col-actions { width: 140px; white-space: nowrap; }
+.file-ext-gif { color: #a371f7; font-size: 10px; background: #a371f722; border-radius: 3px; padding: 1px 5px; margin-left: 5px; }
+.file-ext-jpg { color: var(--accent2); font-size: 10px; background: #0099cc22; border-radius: 3px; padding: 1px 5px; margin-left: 5px; }
+
+/* ── GIF thumbnail preview ── */
+.gif-thumb-cell { width: 44px; height: 44px; border-radius: 6px; background: var(--surface2); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid transparent; }
+.gif-thumb-img { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; image-rendering: pixelated; cursor: pointer; }
+.gif-thumb-spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: gif-thumb-spin 0.7s linear infinite; }
+@keyframes gif-thumb-spin { to { transform: rotate(360deg); } }
+.gif-thumb-cell.gif-thumb-error { cursor: pointer; }
+.gif-thumb-error-icon { color: var(--danger); font-size: 16px; line-height: 1; }
+@keyframes gif-thumb-pulse {
+  0%, 100% { border-color: var(--accent)33; box-shadow: 0 0 0 0 var(--accent)44; }
+  50% { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent)00; }
+}
+.gif-thumb-cell.pulsing { animation: gif-thumb-pulse 1.1s ease-in-out infinite; }
+@keyframes card-pulse {
+  0%, 100% { border-color: var(--border); box-shadow: 0 0 0 0 var(--accent)44; }
+  50% { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent)00; }
+}
+.card.pulsing { animation: card-pulse 1.1s ease-in-out infinite; }
+
+/* ── Drop zone ── */
+.drop-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; color: var(--text3); font-size: 13px; }
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.drop-zone .dz-icon { font-size: 32px; margin-bottom: 8px; }
+
+/* ── Progress bar ── */
+.prog-bar-wrap { background: var(--surface3); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 8px; }
+.prog-bar { height: 100%; background: var(--accent); border-radius: 4px; width: 0%; transition: width 0.3s; }
+.prog-bar.error { background: var(--danger); width: 100% !important; }
+
+/* ── Toast ── */
+#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 10px 16px; font-size: 13px; color: var(--text); animation: toast-in 0.25s ease; pointer-events: auto; max-width: 320px; }
+.toast.error { border-left-color: var(--danger); }
+.toast.warn { border-left-color: var(--warn); }
+@keyframes toast-in { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ── Firmware table ── */
+.fw-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.fw-table th { text-align: left; padding: 8px 10px; color: var(--text3); border-bottom: 1px solid var(--border); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 10px; }
+.fw-table td { padding: 10px 10px; border-bottom: 1px solid var(--border)88; vertical-align: middle; }
+.fw-table tr:last-child td { border-bottom: none; }
+.fw-table tr:hover td { background: var(--surface2); }
+.fw-table tr.selected td { background: var(--accent-dim); }
+.ver-badge { display: inline-flex; align-items: center; gap: 6px; }
+.ver-tag { background: var(--surface3); border-radius: 5px; padding: 2px 8px; font-family: monospace; font-size: 11px; }
+.ver-tag.current { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent)33; }
+.ver-tag.newer { background: #3fb95022; color: var(--success); border: 1px solid var(--success)33; }
+.src-badge { font-size: 10px; background: var(--surface3); padding: 2px 6px; border-radius: 4px; color: var(--text3); }
+.src-badge.github { background: #6e40c922; color: #a371f7; }
+.fw-notes { max-width: 260px; white-space: pre-wrap; font-size: 11px; color: var(--text3); line-height: 1.4; }
+
+/* ── Crop Modal ── */
+#crop-modal { display: none; position: fixed; inset: 0; background: #000000cc; z-index: 5000; align-items: center; justify-content: center; }
+#crop-modal.open { display: flex; }
+
+/* ── Confirm Modal (e.g. flash warning) ── */
+.confirm-modal-overlay { display: none; position: fixed; inset: 0; background: #000000cc; z-index: 6000; align-items: center; justify-content: center; }
+.confirm-modal-overlay.open { display: flex; }
+.confirm-modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; max-width: 440px; width: 90vw; box-shadow: 0 20px 60px #000000aa; }
+.confirm-modal-icon { width: 40px; height: 40px; border-radius: 50%; background: #d2992222; color: var(--warn); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; margin-bottom: 14px; }
+.confirm-modal-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+.confirm-modal-body { font-size: 13px; color: var(--text2); line-height: 1.6; }
+.confirm-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.thumb-lightbox-box { display: flex; flex-direction: column; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: 0 20px 60px #000000aa; }
+#thumb-lightbox-img { max-width: min(70vw, 480px); max-height: min(70vh, 480px); width: auto; height: auto; background: #000; border-radius: 10px; image-rendering: pixelated; }
+.thumb-lightbox-caption { font-size: 12px; color: var(--text3); font-family: monospace; }
+#crop-dialog { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: flex; gap: 12px; max-width: 860px; width: 95vw; max-height: 92vh; flex-direction: column; overflow-y: auto; }
+#crop-dialog h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+#crop-dialog .sub { font-size: 12px; color: var(--text3); margin-bottom: 14px; }
+#crop-body { display: flex; gap: 20px; min-height: 300px; flex-shrink: 0; }
+#crop-canvas-area { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; }
+#crop-canvas-wrap { display: inline-flex; overflow: hidden; position: relative; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); }
+#crop-canvas { display: block; cursor: crosshair; }
+#crop-right { display: flex; flex-direction: column; gap: 12px; width: 180px; flex-shrink: 0; }
+#crop-preview-wrap { width: 100%; aspect-ratio: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; position: relative; }
+#crop-preview-canvas { width: 100%; height: 100%; display: block; }
+.device-preview-wrap { width: 100%; aspect-ratio: 1; background: #000; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+#gif-live-preview { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+.crop-info { font-size: 11px; color: var(--text3); line-height: 1.6; }
+#crop-queue { font-size: 12px; color: var(--text2); padding: 8px; background: var(--surface2); border-radius: 6px; }
+#crop-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+
+/* ── Misc ── */
+.text-muted { color: var(--text3); font-size: 12px; }
+.text-accent { color: var(--accent); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--surface3); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.lock-active-banner { background: #3fb95018; border: 1px solid var(--success)33; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--success); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.lock-active-banner.off { background: var(--surface2); color: var(--text3); border-color: var(--border); }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside id="sidebar">
+  <div id="logo">
+    <img src="Device_Cyan.png" alt="" width="32" height="32" style="border-radius:8px">
+    <div id="logo-text">
+      <div id="logo-title">SmallTV Ultra</div>
+      <div id="logo-sub">GeekMagic Controller</div>
+    </div>
+  </div>
+  <div id="status-bar">
+    <div id="status-dot"></div>
+    <div id="status-text">Not connected</div>
+  </div>
+  <nav>
+    <div class="nav-section">
+      <div class="nav-label">Control</div>
+      <div class="nav-item active" data-page="dashboard">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" data-page="display">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Display
+      </div>
+      <div class="nav-item" data-page="time">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        Time
+      </div>
+      <div class="nav-item" data-page="album">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        Photo Album
+      </div>
+      <div class="nav-item" data-page="weather">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+        Weather
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item" data-page="network">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+        Network & WiFi
+      </div>
+      <div class="nav-item" data-page="firmware">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        Firmware
+      </div>
+      <div class="nav-item" data-page="settings">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        App Settings
+      </div>
+      <div class="nav-item" data-page="about">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        About
+      </div>
+    </div>
+  </nav>
+  <div id="sidebar-footer">
+    <div id="fw-badge">Device: <span id="fw-ver">–</span></div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div id="main">
+  <div id="topbar">
+    <div id="page-title">Dashboard</div>
+    <button class="topbar-btn" onclick="refreshPage()" title="Reloads the current page's data from the device">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Reload Page
+    </button>
+    <button class="topbar-btn accent" id="refresh-all-btn" onclick="refreshAllSettings()" title="Re-fetches Time, Weather, Night Mode and Auto-Switch settings, use this if any of them failed to load on startup">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      <span id="refresh-all-btn-label">Sync Settings</span>
+    </button>
+    <button class="topbar-btn danger" onclick="confirmReboot()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.36 6.64A9 9 0 1 1 12 3"/><polyline points="12 3 12 8 7 8"/></svg>
+      Reboot
+    </button>
+  </div>
+  <div id="content">
+
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div class="stat-grid" style="margin-bottom:16px">
+        <div class="stat-card"><div class="stat-label">Status</div><div class="stat-value" id="dash-status">–</div><div class="stat-sub" id="dash-ip">No IP set</div></div>
+        <div class="stat-card"><div class="stat-label">Active Theme</div><div class="stat-value" id="dash-theme">–</div></div>
+        <div class="stat-card"><div class="stat-label">Brightness</div><div class="stat-value" id="dash-brt">–</div><div class="stat-sub" id="dash-nightmode">–</div></div>
+        <div class="stat-card"><div class="stat-label">Firmware</div><div class="stat-value" id="dash-fw" style="font-size:16px">–</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Device Storage</div>
+        <div class="storage-pill"><div class="storage-pill-fill" id="storage-pill-fill"></div></div>
+        <div class="storage-pill-labels">
+          <span><span class="storage-dot used"></span>Used (photos + GIFs): <strong id="storage-used-label">–</strong></span>
+          <span><span class="storage-dot free"></span>Free: <strong id="storage-free-label">–</strong></span>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card brightness-card">
+          <div class="card-title" style="justify-content:center">Quick Brightness</div>
+          <div class="brightness-pill-stack">
+            <div class="brightness-pill" id="quick-brt-pill" data-min="0" data-max="100" data-value="50" data-value-label="quick-brt-val" data-live="1"
+                 onmousedown="brightnessPillStart(event,this)" ontouchstart="brightnessPillStart(event,this)">
+              <div class="brightness-pill-fill">
+                <svg class="brightness-pill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+              </div>
+            </div>
+            <div class="brightness-pill-value" id="quick-brt-val">50</div>
+            <div class="brightness-pill-sub">Drag to adjust</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Quick Theme</div>
+          <div class="theme-grid theme-grid-sm">
+            <div class="theme-card theme-card-sm" data-theme="1" onclick="setTheme(1)"><div class="ti">🌤️</div><div class="tn">Weather Today</div></div>
+            <div class="theme-card theme-card-sm" data-theme="2" onclick="setTheme(2)"><div class="ti">📅</div><div class="tn">Forecast</div></div>
+            <div class="theme-card theme-card-sm" data-theme="3" onclick="setTheme(3)"><div class="ti">🖼️</div><div class="tn">Photo Album</div></div>
+            <div class="theme-card theme-card-sm" data-theme="4" onclick="setTheme(4)"><div class="ti">🕐</div><div class="tn">Time 1</div></div>
+            <div class="theme-card theme-card-sm" data-theme="5" onclick="setTheme(5)"><div class="ti">⏱️</div><div class="tn">Time 2</div></div>
+            <div class="theme-card theme-card-sm" data-theme="6" onclick="setTheme(6)"><div class="ti">🕰️</div><div class="tn">Time 3</div></div>
+            <div class="theme-card theme-card-sm" data-theme="7" onclick="setTheme(7)"><div class="ti">🌡️</div><div class="tn">Simple Weather</div></div>
+          </div>
+          <div class="card-title" style="margin-top:16px">Quick Access</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="nav('display')">Display</button>
+            <button class="btn btn-secondary btn-sm" onclick="nav('time')">Time</button>
+            <button class="btn btn-secondary btn-sm" onclick="nav('album')">Photo Album</button>
+            <button class="btn btn-secondary btn-sm" onclick="nav('network')">Network</button>
+            <button class="btn btn-secondary btn-sm" onclick="nav('firmware')">Firmware</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmFactoryReset()">Factory Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Display -->
+    <div class="page" id="page-display">
+      <div class="card">
+        <div class="card-title">Select Theme</div>
+        <div class="theme-grid" id="theme-grid">
+          <div class="theme-card" data-theme="1" onclick="setTheme(1)"><div class="ti">🌤️</div><div class="tn">Weather Today</div></div>
+          <div class="theme-card" data-theme="2" onclick="setTheme(2)"><div class="ti">📅</div><div class="tn">Forecast</div></div>
+          <div class="theme-card" data-theme="3" onclick="setTheme(3)"><div class="ti">🖼️</div><div class="tn">Photo Album</div></div>
+          <div class="theme-card" data-theme="4" onclick="setTheme(4)"><div class="ti">🕐</div><div class="tn">Time Style 1</div></div>
+          <div class="theme-card" data-theme="5" onclick="setTheme(5)"><div class="ti">⏱️</div><div class="tn">Time Style 2</div></div>
+          <div class="theme-card" data-theme="6" onclick="setTheme(6)"><div class="ti">🕰️</div><div class="tn">Time Style 3</div></div>
+          <div class="theme-card" data-theme="7" onclick="setTheme(7)"><div class="ti">🌡️</div><div class="tn">Simple Weather</div></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card brightness-card">
+          <div class="card-title" style="justify-content:center">Brightness</div>
+          <div class="brightness-pill-sub" style="margin-bottom:2px">Level (0 to 100)</div>
+          <div class="brightness-pill-stack">
+            <div class="brightness-pill" id="brt-slider-pill" data-min="0" data-max="100" data-value="50" data-value-label="brt-val" data-live="1"
+                 onmousedown="brightnessPillStart(event,this)" ontouchstart="brightnessPillStart(event,this)">
+              <div class="brightness-pill-fill">
+                <svg class="brightness-pill-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+              </div>
+            </div>
+            <div class="brightness-pill-value" id="brt-val">50</div>
+            <div class="brightness-pill-sub">Drag to adjust</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Night Mode</div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Enable Night Mode</div><div class="toggle-sub">Auto-dim at set hours</div></div>
+            <label class="toggle"><input type="checkbox" id="night-en"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="grid-2" style="margin-bottom:10px">
+            <div class="form-row"><label>Start (0–23)</label><input type="number" id="night-t1" min="0" max="23" value="22"></div>
+            <div class="form-row"><label>End (0–23)</label><input type="number" id="night-t2" min="0" max="23" value="7"></div>
+            <div class="form-row"><label>Day brightness</label><input type="number" id="night-b1" min="-10" max="100" value="80"></div>
+            <div class="form-row"><label>Night brightness</label><input type="number" id="night-b2" min="-10" max="100" value="10"></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="applyNightMode()">Apply</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Auto Theme Switching</div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Enable Auto Switch</div><div class="toggle-sub">Cycle through selected themes</div></div>
+          <label class="toggle"><input type="checkbox" id="sw-en"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="form-row"><label>Interval (seconds)</label><input type="number" id="sw-interval" value="30" min="5" max="3600"></div>
+        <div class="form-row"><label>Themes to cycle</label>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:6px" id="sw-theme-checks">
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--text)"><span>Weather Today</span><label class="toggle" style="margin:0"><input type="checkbox" data-ti="0"><span class="toggle-slider"></span></label></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--text)"><span>Forecast</span><label class="toggle" style="margin:0"><input type="checkbox" data-ti="1"><span class="toggle-slider"></span></label></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--text)"><span>Photo Album</span><label class="toggle" style="margin:0"><input type="checkbox" data-ti="2"><span class="toggle-slider"></span></label></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--text)"><span>Time 1</span><label class="toggle" style="margin:0"><input type="checkbox" data-ti="3"><span class="toggle-slider"></span></label></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--text)"><span>Time 2</span><label class="toggle" style="margin:0"><input type="checkbox" data-ti="4"><span class="toggle-slider"></span></label></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--text)"><span>Time 3</span><label class="toggle" style="margin:0"><input type="checkbox" data-ti="5"><span class="toggle-slider"></span></label></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--text)"><span>Simple Weather</span><label class="toggle" style="margin:0"><input type="checkbox" data-ti="6"><span class="toggle-slider"></span></label></div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="applyThemeSwitch()">Apply</button>
+      </div>
+    </div>
+
+    <!-- Time -->
+    <div class="page" id="page-time">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Timezone</div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Auto Timezone</div><div class="toggle-sub">Via weather API location</div></div>
+            <label class="toggle"><input type="checkbox" id="tz-auto" onchange="updateTzManual()"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="form-row" id="tz-manual-row"><label>UTC Offset (minutes)</label><select id="tz-offset"></select></div>
+          <button class="btn btn-primary btn-sm" onclick="applyTimezone()">Apply</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Format</div>
+          <div class="form-row"><label>Hour Format</label>
+            <select id="hour-fmt"><option value="0">24-hour</option><option value="1">12-hour (AM/PM)</option></select>
+          </div>
+          <div class="form-row"><label>Date Format</label>
+            <select id="date-fmt">
+              <option value="1">DD/MM/YYYY</option><option value="2">YYYY/MM/DD</option>
+              <option value="3">MM/DD/YYYY</option><option value="4">MM/DD</option><option value="5">DD/MM</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="applyFormats()">Apply</button>
+        </div>
+        <div class="card">
+          <div class="card-title">NTP Server</div>
+          <div class="form-row"><label>NTP Domain</label><input type="text" id="ntp-server" value="pool.ntp.org"></div>
+          <div class="form-row"><label>Sync Interval (seconds)</label><input type="number" id="ntp-interval" value="3600" min="60"></div>
+          <button class="btn btn-primary btn-sm" onclick="applyNTP()">Apply</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Display Style</div>
+          <div class="form-row"><label>Font</label>
+            <select id="disp-font"><option value="1">Default Big Font</option><option value="2">Digital Font</option></select>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Colon Blink</div><div class="toggle-sub">Animate : between digits</div></div>
+            <label class="toggle"><input type="checkbox" id="colon-blink"><span class="toggle-slider"></span></label>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="applyDisplayStyle()">Apply</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Time Colors</div>
+        <div style="display:flex;gap:28px;flex-wrap:wrap">
+          <div><label>Hours</label>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              <input type="color" id="color-h" value="#ffffff" style="width:60px;height:36px" oninput="document.getElementById('color-h-hex').textContent=this.value">
+              <span id="color-h-hex" style="font-size:12px;color:var(--text2)">#ffffff</span>
+            </div>
+          </div>
+          <div><label>Minutes</label>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              <input type="color" id="color-m" value="#feba01" style="width:60px;height:36px" oninput="document.getElementById('color-m-hex').textContent=this.value">
+              <span id="color-m-hex" style="font-size:12px;color:var(--text2)">#feba01</span>
+            </div>
+          </div>
+          <div><label>Seconds</label>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              <input type="color" id="color-s" value="#ffffff" style="width:60px;height:36px" oninput="document.getElementById('color-s-hex').textContent=this.value">
+              <span id="color-s-hex" style="font-size:12px;color:var(--text2)">#ffffff</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm mt-12" onclick="applyColors()">Apply Colors</button>
+      </div>
+    </div>
+
+    <!-- Photo Album -->
+    <div class="page" id="page-album">
+      <div class="card">
+        <div class="card-title">Slideshow Settings</div>
+        <div class="grid-2">
+          <div class="form-row"><label>Interval (seconds)</label><input type="number" id="album-interval" value="30" min="1"></div>
+          <div><div class="toggle-row" style="margin-top:20px">
+            <div><div class="toggle-label">Auto Play</div></div>
+            <label class="toggle"><input type="checkbox" id="album-autoplay" checked><span class="toggle-slider"></span></label>
+          </div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary btn-sm" onclick="applyAlbumSettings()">Apply</button>
+          <span class="text-muted" id="album-space"></span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Upload Images</div>
+        <div class="drop-zone" id="drop-zone" onclick="openFileDialog()">
+          <div class="dz-icon">📁</div>
+          <div>Click to select images <span class="text-muted">or drag & drop</span></div>
+          <div class="text-muted mt-8">Any size/format, crop & resize handled automatically</div>
+        </div>
+        <div id="upload-prog-wrap" style="display:none;margin-top:10px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px">
+            <span id="upload-status">Uploading...</span>
+            <span id="upload-count"></span>
+          </div>
+          <div class="prog-bar-wrap"><div class="prog-bar" id="upload-bar"></div></div>
+        </div>
+      </div>
+      <div class="card" id="album-files-card">
+        <div class="card-title">
+          Stored Images
+          <span id="album-free" class="text-muted" style="font-size:11px;font-weight:400;margin-left:8px"></span>
+          <button class="btn btn-secondary btn-sm" style="margin-left:auto;margin-right:6px" onclick="loadAlbum(true)">Reload</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmClearAll()">Clear All</button>
+        </div>
+        <div id="file-table-wrap"><div class="text-muted">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- Weather -->
+    <div class="page" id="page-weather">
+
+      <!-- Auto-Configure -->
+      <div class="card" style="border-color:var(--accent);background:linear-gradient(135deg,var(--surface) 0%,#0f1d35 100%)">
+        <div class="card-title" style="color:var(--accent);font-size:14px">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Auto-Configure
+        </div>
+        <p class="text-muted" style="margin-bottom:16px;font-size:13px">
+          One click, the app detects your location and configures city, units, and interval automatically. No accounts, no manual entry.
+        </p>
+
+        <button class="btn btn-primary" id="auto-cfg-btn" onclick="runAutoConfig()" style="font-size:14px;padding:10px 24px;margin-bottom:14px">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+          Detect My Location &amp; Configure
+        </button>
+
+        <!-- Result panel -->
+        <div id="auto-cfg-result" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div id="auto-cfg-rows" style="display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:12px;align-items:center"></div>
+          <button class="btn btn-primary btn-sm" onclick="commitAutoConfig()" style="margin-top:12px" id="auto-cfg-save-btn">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Apply All to Device
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('auto-cfg-result').style.display='none'" style="margin-top:12px;margin-left:6px">Cancel</button>
+        </div>
+
+        <div id="auto-cfg-status" class="text-muted" style="font-size:12px;margin-top:6px;min-height:16px"></div>
+
+        <!-- Divider -->
+        <div style="border-top:1px solid var(--border);margin:16px 0 14px"></div>
+
+        <!-- Manual region presets -->
+        <div style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Or pick your region</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="applyRegionPreset('metric')">🌍 Metric <span style="color:var(--text2);font-size:10px">°C · km/h · hPa</span></button>
+          <button class="btn btn-secondary btn-sm" onclick="applyRegionPreset('imperial')">🇺🇸 Imperial <span style="color:var(--text2);font-size:10px">°F · mile/h · inHg</span></button>
+          <button class="btn btn-secondary btn-sm" onclick="applyRegionPreset('uk')">🇬🇧 UK <span style="color:var(--text2);font-size:10px">°C · mile/h · hPa</span></button>
+          <button class="btn btn-secondary btn-sm" onclick="applyRegionPreset('canada')">🇨🇦 Canada <span style="color:var(--text2);font-size:10px">°C · km/h · hPa</span></button>
+        </div>
+        <div id="region-preset-status" class="text-muted" style="font-size:11px;margin-top:6px;min-height:14px"></div>
+      </div>
+
+      <!-- 1. City -->
+      <div class="card">
+        <div class="card-title">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+          1. City Location
+        </div>
+        <p class="text-muted" style="margin-bottom:14px">
+          Enter a city name (e.g. <strong style="color:var(--text)">Seoul</strong>, <strong style="color:var(--text)">New York</strong>) or a numeric OpenWeatherMap City ID for an exact match.
+          To find a City ID: search on <span class="text-accent">old.openweathermap.org/find</span> and copy the number from the result URL.
+        </p>
+        <div class="form-row">
+          <label>City Name or City ID</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="weather-city" placeholder="e.g. Seoul  or  1835848">
+            <button class="btn btn-primary btn-sm" onclick="applyWeatherCity()">Save</button>
+          </div>
+        </div>
+        <div id="weather-city-status" class="text-muted" style="font-size:11px;margin-top:4px"></div>
+      </div>
+
+      <!-- 2. Units -->
+      <div class="card">
+        <div class="card-title">2. Unit Format</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+          <div class="form-row" style="margin:0">
+            <label>Wind Speed</label>
+            <select id="unit-wind" style="margin-top:6px">
+              <option value="m/s">m/s</option>
+              <option value="km/h">km/h</option>
+              <option value="mile/h">mile/h</option>
+            </select>
+          </div>
+          <div class="form-row" style="margin:0">
+            <label>Temperature</label>
+            <select id="unit-temp" style="margin-top:6px">
+              <option value="°C">°C (Celsius)</option>
+              <option value="°F">°F (Fahrenheit)</option>
+            </select>
+          </div>
+          <div class="form-row" style="margin:0">
+            <label>Atmospheric Pressure</label>
+            <select id="unit-pressure" style="margin-top:6px">
+              <option value="hPa">hPa</option>
+              <option value="kPa">kPa</option>
+              <option value="mmHg">mmHg</option>
+              <option value="inHg">inHg</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="applyWeatherUnits()" style="margin-top:14px">Save Units</button>
+      </div>
+
+      <!-- 3. Update Interval -->
+      <div class="card">
+        <div class="card-title">3. Weather Update Interval</div>
+        <p class="text-muted" style="margin-bottom:12px">Default is 20 minutes. With your own API key you can use shorter intervals.</p>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="number" id="weather-interval" value="20" min="5" max="1440" style="width:90px">
+          <span class="text-muted">minutes</span>
+          <button class="btn btn-primary btn-sm" onclick="applyWeatherInterval()">Save</button>
+        </div>
+      </div>
+
+      <!-- 4 & 5. API Keys -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            4. Current Weather API Key
+          </div>
+          <p class="text-muted" style="margin-bottom:12px">
+            OpenWeatherMap key for current conditions. Free registration at <span class="text-accent">openweathermap.org/api</span>. New keys take 1–2 hours to activate.
+          </p>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="weather-apikey" placeholder="your openweathermap key" style="font-family:monospace;font-size:12px">
+            <button class="btn btn-primary btn-sm" onclick="applyWeatherApiKey()">Save</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearWeatherApiKey()" title="Remove custom key">Clear</button>
+          </div>
+          <div class="text-muted" style="font-size:11px;margin-top:6px">Clear removes your custom key. The device may fall back to its built-in shared key, if weather stops working, reboot the device from App Settings.</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            5. Forecast API Key
+          </div>
+          <p class="text-muted" style="margin-bottom:12px">
+            Separate key for weather forecast data. The public key may run out, set your own for reliability.
+          </p>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="weather-fkey" placeholder="your forecast API key" style="font-family:monospace;font-size:12px">
+            <button class="btn btn-primary btn-sm" onclick="applyWeatherForecastKey()">Save</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearWeatherForecastKey()" title="Remove custom key">Clear</button>
+          </div>
+          <div class="text-muted" style="font-size:11px;margin-top:6px">Clear removes your custom key. If forecast stops working after clearing, reboot the device from App Settings.</div>
+        </div>
+      </div>
+
+      <!-- 6. Weather GIF animations -->
+      <div class="card" id="weather-gif-card">
+        <div class="card-title">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          6. Weather Screen GIF Animation
+        </div>
+        <p class="text-muted" style="margin-bottom:14px">
+          Upload animated GIFs displayed on the weather screen (stored as 80×80 px on device). You can upload any size, the app will resize to 80×80 automatically.
+        </p>
+
+        <!-- Upload row -->
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+          <button class="btn btn-secondary btn-sm" onclick="browseWeatherGif()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload GIF
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="loadGifList(true)">Refresh</button>
+          <button class="btn btn-danger btn-sm" onclick="clearAllGifs()">Clear All</button>
+          <span id="gif-free-space" class="text-muted" style="font-size:12px"></span>
+        </div>
+        <div id="gif-upload-progress" style="display:none;margin-bottom:10px">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px" id="gif-upload-label">Uploading…</div>
+          <div style="background:var(--surface2);border-radius:6px;height:6px"><div id="gif-upload-bar" style="background:var(--accent);height:6px;border-radius:6px;width:0;transition:width 0.3s"></div></div>
+        </div>
+
+        <!-- File table -->
+        <div id="gif-file-table-wrap">
+          <p class="text-muted" style="font-size:12px">Click Refresh to load GIF list from device.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Network -->
+    <div class="page" id="page-network">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Device WiFi</div>
+          <div class="form-row"><label>SSID</label><input type="text" id="dev-ssid" placeholder="WiFi network name or click below"></div>
+          <div class="form-row"><label>Password <span style="font-size:10px;color:var(--text3)">(leave blank for open networks)</span></label><input type="text" id="dev-pass" placeholder="Leave blank if no password" autocomplete="off" style="-webkit-text-security:disc"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary btn-sm" onclick="scanDeviceWifi()">Scan</button>
+            <button class="btn btn-primary btn-sm" onclick="applyDeviceWifi()">Connect Device</button>
+          </div>
+          <div class="wifi-list mt-12" id="device-wifi-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">PC WiFi</div>
+          <p class="text-muted" style="margin-bottom:8px">Current: <span id="pc-current-wifi" class="text-accent">–</span></p>
+          <button class="btn btn-secondary btn-sm" onclick="scanPCWifi()" style="margin-bottom:10px">Scan</button>
+          <div class="wifi-list" id="pc-wifi-list"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          WiFi Lock - Force PC to Stay on Device Network
+        </div>
+        <div id="lock-banner" class="lock-active-banner off">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          WiFi lock inactive
+        </div>
+        <p class="text-muted" style="margin-bottom:14px">
+          When enabled, the app will monitor your PC's WiFi connection and automatically reconnect to the target network if it drifts. Ethernet adapters are <strong style="color:var(--text)">temporarily disabled</strong> while the lock is active to prevent your PC routing traffic through Ethernet instead of WiFi (Ethernet takes priority by default in Windows and can silently break the connection to the device).
+        </p>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Enable WiFi Lock</div><div class="toggle-sub">Runs as background service, re-enables Ethernet on app exit</div></div>
+          <label class="toggle"><input type="checkbox" id="wifi-lock-en"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="form-row"><label>Target WiFi SSID (the network your GeekMagic is on)</label><input type="text" id="wifi-lock-ssid" placeholder="e.g. HomeNetwork_2.4G"></div>
+        <div class="form-row"><label>Check Interval (seconds)</label><input type="number" id="wifi-lock-interval" value="30" min="10" max="300"></div>
+        <div id="eth-adapter-info" class="text-muted mt-8" style="margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="applyWifiLock()">Save & Apply</button>
+          <button class="btn btn-secondary btn-sm" onclick="checkEthAdapters()">Detect Ethernet Adapters</button>
+        </div>
+        <div class="text-muted mt-8" style="color:var(--warn)">⚠ Disabling Ethernet requires the app to be run as Administrator.</div>
+      </div>
+    </div>
+
+    <!-- Firmware -->
+    <div class="page" id="page-firmware">
+      <div class="card">
+        <div class="card-title">
+          Device Firmware
+          <span id="fw-device-badge" style="margin-left:auto"></span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="loadFirmware()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Refresh / Check GitHub
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="manualFirmwareUpload()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+            Manual Upload (.bin / .zip)
+          </button>
+        </div>
+
+        <!-- Install progress -->
+        <div id="fw-progress-wrap" style="display:none;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:5px">
+            <span id="fw-status-text">Preparing...</span>
+            <span id="fw-pct-text">0%</span>
+          </div>
+          <div class="prog-bar-wrap"><div class="prog-bar" id="fw-prog-bar"></div></div>
+        </div>
+
+        <div id="fw-table-wrap">
+          <div class="text-muted">Click "Refresh" to check for updates.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Firmware Notes</div>
+        <div id="fw-notes-box" style="font-size:12px;color:var(--text2);white-space:pre-wrap;line-height:1.6;max-height:200px;overflow-y:auto">
+          Select a firmware version above to see its changelog.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Important</div>
+        <ul style="font-size:12px;color:var(--text2);line-height:2;padding-left:16px">
+          <li>Verify your model is <strong style="color:var(--text)">GeekMagic-Ultra (ESP8266)</strong> before updating</li>
+          <li>Wrong model = display failure or malfunction</li>
+          <li>Keep the device powered during update</li>
+          <li>If you get a "Magic Byte" error, check the file's MD5 sum</li>
+          <li>Disable antivirus temporarily if it reports false positives on .bin files</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="page" id="page-settings">
+      <div class="card">
+        <div class="card-title">Device Connection</div>
+        <div class="form-row"><label>Device IP Address</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="device-ip" placeholder="192.168.1.x" style="flex:1">
+            <button class="btn btn-secondary btn-sm" onclick="testConnection()">Test</button>
+          </div>
+          <div class="text-muted mt-8">Enter just the IP, e.g. <span class="text-accent">192.168.1.42</span>, not http://...</div>
+        </div>
+        <div class="form-row"><label>Request Timeout (seconds)</label><input type="number" id="req-timeout" value="4" min="1" max="30"></div>
+        <button class="btn btn-primary btn-sm" onclick="saveAppSettings()">Save Settings</button>
+      </div>
+      <div class="card">
+        <div class="card-title">How to find your device IP</div>
+        <ol style="font-size:13px;color:var(--text2);line-height:2;padding-left:18px">
+          <li>Make sure your PC and device are on the same WiFi (2.4 GHz only)</li>
+          <li>Check your router's device list - look for <strong style="color:var(--text)">GIFTV</strong></li>
+          <li>Or open the original GeekMagic app and note the IP shown there</li>
+          <li>Paste just the IP address above (e.g. <strong style="color:var(--accent)">192.168.1.42</strong>)</li>
+        </ol>
+      </div>
+      <div class="card">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:5px;vertical-align:-2px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Scan Network for Device
+          </span>
+          <button class="btn btn-primary btn-sm" onclick="runDeviceScan()" id="scan-net-btn">Scan Now</button>
+        </div>
+        <p class="text-muted" style="margin:6px 0 10px">Scans your local network for a GeekMagic device. Useful if your device IP has changed.</p>
+        <div id="scan-net-results"></div>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="page" id="page-about">
+      <div class="card" style="max-width:720px;margin:0 auto">
+
+        <div style="text-align:center;padding:8px 0 28px">
+          <div style="width:72px;height:72px;border-radius:18px;background:var(--accent-dim);border:1px solid var(--accent)33;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px">
+            <svg width="38" height="38" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px">GeekMagic SmallTV-Ultra</div>
+          <div style="font-size:12px;color:var(--accent);font-family:monospace;letter-spacing:0.5px">Desktop Controller · v2.0</div>
+        </div>
+
+
+        <div style="margin-bottom:22px">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            About This App
+          </div>
+          <p style="font-size:12px;color:var(--text3);line-height:1.8;margin:0">
+            A native Windows desktop controller for the GeekMagic SmallTV-Ultra. The device ships with a browser-based web UI served directly from the device, this app ports those same HTTP endpoints into a persistent, feature-rich desktop experience with image editing, WiFi lock, firmware management, and one-click weather configuration. All device commands are identical to what the official web UI sends; nothing is reverse-engineered.
+          </p>
+        </div>
+
+        <div style="margin-bottom:22px">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            About the Device
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:11px">
+              <div style="color:var(--accent);font-weight:600;margin-bottom:3px">Hardware</div>
+              <div style="color:var(--text3);line-height:1.7">ESP8266 MCU · 240×240 IPS display · Built-in WiFi (2.4 GHz) · USB-C powered</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:11px">
+              <div style="color:var(--accent);font-weight:600;margin-bottom:3px">Display Modes</div>
+              <div style="color:var(--text3);line-height:1.7">Live weather · 5-day forecast · Photo album slideshow · Multiple clock styles</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:11px">
+              <div style="color:var(--accent);font-weight:600;margin-bottom:3px">Connectivity</div>
+              <div style="color:var(--text3);line-height:1.7">HTTP REST API over local WiFi · OpenWeatherMap integration · OTA firmware updates</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:11px">
+              <div style="color:var(--accent);font-weight:600;margin-bottom:3px">Storage</div>
+              <div style="color:var(--text3);line-height:1.7">SPIFFS flash filesystem · 240×240 JPEG album images · 80×80 animated weather GIFs</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:22px">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Tech Stack
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2);font-family:monospace">Python 3</span>
+            <span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2);font-family:monospace">pywebview</span>
+            <span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2);font-family:monospace">Pillow</span>
+            <span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2);font-family:monospace">requests</span>
+            <span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2);font-family:monospace">HTML / CSS / JS</span>
+            <span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2);font-family:monospace">Canvas API</span>
+            <span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2);font-family:monospace">PyInstaller</span>
+          </div>
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:16px">
+          <strong style="color:var(--text2)">Disclaimer:</strong> This is an unofficial third-party application. GeekMagic and SmallTV-Ultra are trademarks of their respective owners. This app communicates with the device using the same local HTTP API as the official built-in web UI and does not modify or reverse-engineer any firmware.
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;max-width:320px;margin:0 auto;text-align:center">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px">App Developer</div>
+          <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:2px">Zahidul Haque Tipu</div>
+          <div style="font-size:11px;color:var(--text3)">UI design, Python backend &amp; application</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- Flash Confirmation Modal -->
+<div id="flash-confirm-modal" class="confirm-modal-overlay">
+  <div class="confirm-modal-box">
+    <div class="confirm-modal-icon">!</div>
+    <div class="confirm-modal-title">Flash Firmware</div>
+    <div class="confirm-modal-body" id="flash-confirm-body"></div>
+    <div class="confirm-modal-actions">
+      <button class="btn btn-secondary btn-sm" onclick="closeFlashConfirm()">Cancel</button>
+      <button class="btn btn-warn btn-sm" onclick="proceedFlash()">Flash Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Generic Confirmation Modal (themed replacement for native confirm()) -->
+<div id="generic-confirm-modal" class="confirm-modal-overlay">
+  <div class="confirm-modal-box">
+    <div class="confirm-modal-icon" id="generic-confirm-icon">?</div>
+    <div class="confirm-modal-title" id="generic-confirm-title">Confirm</div>
+    <div class="confirm-modal-body" id="generic-confirm-body"></div>
+    <div class="confirm-modal-actions">
+      <button class="btn btn-secondary btn-sm" id="generic-confirm-cancel">Cancel</button>
+      <button class="btn btn-sm" id="generic-confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Thumbnail Lightbox -->
+<div id="thumb-lightbox" class="confirm-modal-overlay" onclick="if(event.target===this) closeThumbLightbox()">
+  <div class="thumb-lightbox-box">
+    <img id="thumb-lightbox-img" alt="">
+    <div id="thumb-lightbox-caption" class="thumb-lightbox-caption"></div>
+    <button class="btn btn-secondary btn-sm" onclick="closeThumbLightbox()">Close</button>
+  </div>
+</div>
+
+<!-- Crop Modal -->
+<div id="crop-modal">
+  <div id="crop-dialog">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between">
+      <h3 id="crop-title">Crop Image</h3>
+      <button class="btn btn-secondary btn-sm" onclick="cancelUpload()" title="Cancel upload" style="padding:2px 9px;font-size:14px;line-height:1">✕</button>
+    </div>
+    <div class="sub" id="crop-sub"></div>
+    <div id="crop-body">
+      <div id="crop-canvas-area">
+        <div id="crop-canvas-wrap">
+          <canvas id="crop-canvas"></canvas>
+        </div>
+      </div>
+      <div id="crop-right">
+        <div id="static-preview-block">
+          <div class="text-muted" style="margin-bottom:6px">Preview (240×240)</div>
+          <div id="crop-preview-wrap"><canvas id="crop-preview-canvas" width="240" height="240"></canvas></div>
+        </div>
+        <div id="gif-live-preview-block" style="display:none">
+          <div class="text-muted" style="margin-bottom:6px">Device Preview</div>
+          <div class="device-preview-wrap"><img id="gif-live-preview" alt="Live device preview"></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.4" id="gif-live-preview-label"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+          <span style="font-size:11px;color:var(--text3)">Zoom</span>
+          <button class="btn btn-secondary btn-sm" style="padding:2px 10px;font-size:16px;line-height:1" onclick="adjustCropZoom(1.15)" title="Zoom in">+</button>
+          <button class="btn btn-secondary btn-sm" style="padding:2px 10px;font-size:16px;line-height:1" onclick="adjustCropZoom(0.87)" title="Zoom out">−</button>
+        </div>
+        <div class="crop-info" id="crop-info">–</div>
+        <div id="crop-queue"></div>
+      </div>
+    </div>
+    <!-- Adjustments -->
+    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:0.4px">ADJUSTMENTS</span>
+        <button class="btn btn-secondary btn-sm" onclick="resetAdjustments()" style="font-size:10px;padding:2px 8px">Reset</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px">
+        <div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:2px"><span>Brightness</span><span id="adj-brt-val">1.0</span></div><input type="range" id="adj-brt" min="0.3" max="2" step="0.05" value="1" oninput="onAdjust()" style="width:100%;accent-color:var(--accent)"></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:2px"><span>Contrast</span><span id="adj-con-val">1.0</span></div><input type="range" id="adj-con" min="0.3" max="2" step="0.05" value="1" oninput="onAdjust()" style="width:100%;accent-color:var(--accent)"></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:2px"><span>Saturation</span><span id="adj-sat-val">1.0</span></div><input type="range" id="adj-sat" min="0" max="2" step="0.05" value="1" oninput="onAdjust()" style="width:100%;accent-color:var(--accent)"></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:2px"><span>Sharpness</span><span id="adj-shp-val">1.0</span></div><input type="range" id="adj-shp" min="0" max="3" step="0.05" value="1" oninput="onAdjust()" style="width:100%;accent-color:var(--accent)"></div>
+      </div>
+    </div>
+    <!-- GIF Compression (shown only for gif files) -->
+    <div id="gif-compress-panel" style="display:none;border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:0.4px">GIF COMPRESSION</span>
+        <span id="gif-compress-badge" style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--text3)">–</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;margin-bottom:10px">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:2px">
+            <span>Max Colors</span><span id="gif-colors-val">16</span>
+          </div>
+          <input type="range" id="gif-colors" min="2" max="256" step="2" value="16"
+                 oninput="onGifCompress()" style="width:100%;accent-color:var(--accent)">
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:1px">
+            <span>2 (B&W-like)</span><span>256 (best quality)</span>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:2px">
+            <span>Max Frames</span><span id="gif-frames-val">20</span>
+          </div>
+          <input type="range" id="gif-frames" min="2" max="60" step="1" value="20"
+                 oninput="onGifCompress()" style="width:100%;accent-color:var(--accent)">
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:1px">
+            <span>2</span><span>60</span>
+          </div>
+        </div>
+      </div>
+      <!-- File size limit -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:8px 10px;background:var(--surface2);border-radius:6px">
+        <label class="toggle" style="margin:0">
+          <input type="checkbox" id="gif-sizelimit-toggle" onchange="onGifCompress()">
+          <span class="toggle-slider"></span>
+        </label>
+        <span style="font-size:11px;color:var(--text2);flex:1">File size limit</span>
+        <input type="number" id="gif-sizelimit-kb" min="5" max="2000" value="50"
+               oninput="onGifCompress()"
+               style="width:64px;padding:3px 6px;font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);text-align:right">
+        <span style="font-size:11px;color:var(--text3)">KB</span>
+      </div>
+      <div id="gif-compress-stats" style="background:var(--surface2);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--text3);display:flex;gap:16px;flex-wrap:wrap"></div>
+    </div>
+    <div id="crop-actions">
+      <button class="btn btn-danger btn-sm" onclick="cancelUpload()" style="margin-right:auto">Cancel</button>
+      <button class="btn btn-secondary btn-sm" onclick="skipCrop()">Skip</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmCrop()">Crop & Upload</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  Utilities
+// ══════════════════════════════════════════════════════════
+function escHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ══════════════════════════════════════════════════════════
+//  State
+// ══════════════════════════════════════════════════════════
+let currentPage = 'dashboard';
+let _settings = {};
+
+// ══════════════════════════════════════════════════════════
+//  Brightness pill (vertical iOS-style slider)
+// ══════════════════════════════════════════════════════════
+function setBrightnessPill(pillId, value) {
+  const pill = document.getElementById(pillId);
+  if (!pill) return;
+  const min = parseFloat(pill.dataset.min), max = parseFloat(pill.dataset.max);
+  const clamped = Math.max(min, Math.min(max, value));
+  pill.dataset.value = clamped;
+  const pct = (clamped - min) / (max - min) * 100;
+  pill.querySelector('.brightness-pill-fill').style.height = pct + '%';
+  const valEl = document.getElementById(pill.dataset.valueLabel);
+  if (valEl) valEl.textContent = Math.round(clamped);
+}
+
+function getBrightnessPillValue(pillId) {
+  const pill = document.getElementById(pillId);
+  return pill ? Math.round(parseFloat(pill.dataset.value)) : 0;
+}
+
+function _brightnessPillValueFromEvent(pill, clientY) {
+  const rect = pill.getBoundingClientRect();
+  const min = parseFloat(pill.dataset.min), max = parseFloat(pill.dataset.max);
+  let pct = 1 - (clientY - rect.top) / rect.height;
+  pct = Math.max(0, Math.min(1, pct));
+  return Math.round(min + pct * (max - min));
+}
+
+let _draggingBrightnessPill = null;
+function brightnessPillStart(e, pill) {
+  e.preventDefault();
+  _draggingBrightnessPill = pill;
+  _brightnessPillDrag(e);
+}
+function _brightnessPillDrag(e) {
+  if (!_draggingBrightnessPill) return;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  setBrightnessPill(_draggingBrightnessPill.id, _brightnessPillValueFromEvent(_draggingBrightnessPill, clientY));
+  if (_draggingBrightnessPill.dataset.live) _liveSetBrightness(_draggingBrightnessPill.id);
+}
+function _brightnessPillEnd() {
+  if (_draggingBrightnessPill && _draggingBrightnessPill.dataset.live) {
+    _liveSetBrightness(_draggingBrightnessPill.id, true);
+  }
+  _draggingBrightnessPill = null;
+}
+document.addEventListener('mousemove', _brightnessPillDrag);
+document.addEventListener('mouseup', _brightnessPillEnd);
+document.addEventListener('touchmove', _brightnessPillDrag, { passive: false });
+document.addEventListener('touchend', _brightnessPillEnd);
+
+// Send brightness to the device as the user drags, instead of requiring a
+// separate Apply click. Debounced while dragging (the ESP8266 is slow and
+// single-threaded, flooding it with a request per pixel of movement would
+// just queue up and lag behind the finger/cursor), with an immediate final
+// send on release so the last value is never left stuck in the debounce.
+let _brightnessLiveDebounce = null;
+function _liveSetBrightness(pillId, immediate = false) {
+  const v = getBrightnessPillValue(pillId);
+  const send = async () => {
+    const r = await api('set_brightness', v);
+    if (!r.ok) toast(r.error, 'error');
+  };
+  clearTimeout(_brightnessLiveDebounce);
+  if (immediate) { send(); return; }
+  _brightnessLiveDebounce = setTimeout(send, 90);
+}
+
+// Upload queue state
+let _uploadQueue = [];
+let _uploadIdx = 0;
+let _cropFilePath = '';
+let _cropNaturalW = 0;
+let _cropNaturalH = 0;
+let _cropX = 0, _cropY = 0, _cropSize = 0;
+let _dragging = false, _resizing = false;
+let _cropMode = 'album'; // 'album' = 240×240 JPEG → /image,  'gif' = 80×80 GIF → /gif
+let _dragOffX = 0, _dragOffY = 0;
+let _scaleX = 1, _scaleY = 1; // canvas display → natural image scale
+
+// Firmware polling
+let _fwPollTimer = null;
+
+// ══════════════════════════════════════════════════════════
+//  Navigation
+// ══════════════════════════════════════════════════════════
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+  const titles = { dashboard:'Dashboard', display:'Display', time:'Time',
+    album:'Photo Album', weather:'Weather', network:'Network & WiFi', firmware:'Firmware Update', settings:'App Settings' };
+  document.getElementById('page-title').textContent = titles[page] || page;
+  currentPage = page;
+  loadPage(page);
+}
+document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', () => nav(item.dataset.page)));
+
+// ══════════════════════════════════════════════════════════
+//  API bridge
+// ══════════════════════════════════════════════════════════
+async function api(method, ...args) {
+  try { return await window.pywebview.api[method](...args); }
+  catch(e) { return { ok: false, error: String(e) }; }
+}
+
+// ══════════════════════════════════════════════════════════
+//  Device request queue, the ESP8266 is single-threaded and can
+//  only serve one HTTP request at a time. Bulk operations (loading
+//  many GIF/photo thumbnails) must go through this so they hit the
+//  device one at a time instead of all firing at once.
+// ══════════════════════════════════════════════════════════
+let _deviceQueue = Promise.resolve();
+function queueDeviceCall(fn) {
+  const run = _deviceQueue.then(fn, fn);
+  _deviceQueue = run.then(() => {}, () => {});
+  return run;
+}
+
+// ══════════════════════════════════════════════════════════
+//  Toast
+// ══════════════════════════════════════════════════════════
+function toast(msg, type='') {
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' '+type : '');
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ══════════════════════════════════════════════════════════
+//  Status polling
+// ══════════════════════════════════════════════════════════
+async function pollStatus() {
+  _settings = await api('get_settings');
+  const r = await api('ping_device');
+  _deviceOnline = !!r.ok;
+  const dot = document.getElementById('status-dot');
+  const ip = _settings.device_ip || '';
+  dot.className = r.ok ? 'online' : (ip ? 'offline' : '');
+  dot.id = 'status-dot';
+  document.getElementById('status-text').textContent = r.ok ? ip : (ip ? ip + ', unreachable' : 'No IP set');
+  document.getElementById('dash-status').textContent = r.ok ? 'Online' : (ip ? 'Offline' : 'No IP');
+  document.getElementById('dash-ip').textContent = ip || 'Configure in Settings';
+
+  // WiFi lock banner
+  const lockStatus = await api('get_wifi_lock_status');
+  const banner = document.getElementById('lock-banner');
+  if (lockStatus.active) {
+    banner.className = 'lock-active-banner';
+    banner.innerHTML = `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> WiFi lock ACTIVE, Ethernet disabled (${(lockStatus.disabled_adapters||[]).join(', ') || 'none found'}) · Target: ${_settings.wifi_lock_ssid}`;
+  } else {
+    banner.className = 'lock-active-banner off';
+    banner.innerHTML = `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> WiFi lock inactive`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  Page loaders
+// ══════════════════════════════════════════════════════════
+// Pages already fetched once are left alone on revisit, switching tabs
+// shouldn't re-hit the device for a full file list + every thumbnail again.
+// Pass force=true (used by the "Reload Page" button) to actually refetch.
+const _loadedPages = new Set();
+async function loadPage(page, force = false) {
+  if (!force && _loadedPages.has(page)) return;
+  _loadedPages.add(page);
+  if (page === 'dashboard') await loadDashboard();
+  if (page === 'display') await loadDisplay();
+  if (page === 'time') await loadTime();
+  if (page === 'album') await loadAlbum();
+  if (page === 'network') await loadNetwork();
+  if (page === 'weather') await loadWeather();
+  if (page === 'firmware') { /* loaded on demand */ }
+  if (page === 'settings') await loadSettings();
+}
+
+async function loadDashboard() {
+  const [info, brt, theme, nm, images, gifs] = await Promise.all([
+    api('get_device_info'), api('get_brightness'), api('get_theme'), api('get_night_mode'),
+    api('get_file_list'), api('get_gif_list')
+  ]);
+  if (info.ok) {
+    const raw = info.data;
+    const v = typeof raw === 'object'
+      ? (raw.v || raw.ver || raw.version || JSON.stringify(raw))
+      : String(raw);
+    const label = String(v).replace(/^Ultra-V/i, 'V');
+    document.getElementById('dash-fw').textContent = label;
+    document.getElementById('fw-ver').textContent = label;
+  }
+  if (brt.ok) {
+    const b = brt.data.brt ?? brt.data;
+    document.getElementById('dash-brt').textContent = b;
+    setBrightnessPill('quick-brt-pill', b);
+  }
+  if (theme.ok) {
+    const names = ['','Weather Today','Weather Forecast','Photo Album','Time 1','Time 2','Time 3','Simple Weather'];
+    const t = theme.data.theme ?? theme.data;
+    document.getElementById('dash-theme').textContent = names[t] || t;
+    document.querySelectorAll('.theme-card').forEach(c => c.classList.toggle('active', parseInt(c.dataset.theme) === parseInt(t)));
+  }
+  if (nm.ok) {
+    const d = nm.data;
+    document.getElementById('dash-nightmode').textContent =
+      d.en ? `Night ${d.t1}:00–${d.t2}:00` : 'Night mode off';
+  }
+  updateStoragePill(images, gifs);
+}
+
+function updateStoragePill(images, gifs) {
+  const fill = document.getElementById('storage-pill-fill');
+  const usedLabel = document.getElementById('storage-used-label');
+  const freeLabel = document.getElementById('storage-free-label');
+  if (!images.ok && !gifs.ok) return;
+  const sumKb = (r) => (r.ok ? (r.data.files || []).reduce((sum, f) => sum + (typeof f === 'object' && f.size_kb ? f.size_kb : 0), 0) : 0);
+  const usedKb = sumKb(images) + sumKb(gifs);
+  const freeKb = (images.ok ? images.data.free_kb : null) ?? (gifs.ok ? gifs.data.free_kb : null);
+  if (freeKb == null) return;
+  const totalKb = usedKb + freeKb;
+  const pct = totalKb > 0 ? Math.min(100, (usedKb / totalKb) * 100) : 0;
+  fill.style.width = pct + '%';
+  fill.style.background = pct >= 90 ? 'var(--danger)' : pct >= 75 ? 'var(--warn)' : 'var(--accent)';
+  usedLabel.textContent = `${usedKb} KB`;
+  freeLabel.textContent = `${freeKb} KB`;
+}
+
+async function loadDisplay() {
+  const [brt, nm, theme, swl] = await Promise.all([
+    api('get_brightness'), api('get_night_mode'), api('get_theme'), api('get_theme_list')
+  ]);
+  if (brt.ok) { const b = brt.data.brt ?? brt.data; setBrightnessPill('brt-slider-pill', b); }
+  if (nm.ok) { const d = nm.data; document.getElementById('night-en').checked = !!d.en; document.getElementById('night-t1').value = d.t1??22; document.getElementById('night-t2').value = d.t2??7; document.getElementById('night-b1').value = d.b1??80; document.getElementById('night-b2').value = d.b2??10; }
+  if (theme.ok) { const t = theme.data.theme ?? theme.data; document.querySelectorAll('.theme-card').forEach(c => c.classList.toggle('active', parseInt(c.dataset.theme)===t)); }
+  if (swl.ok) { const d = swl.data; document.getElementById('sw-en').checked = !!d.sw_en; document.getElementById('sw-interval').value = d.theme_interval??30; const list = (d.theme_list||'').split(',').map(Number); document.querySelectorAll('[data-ti]').forEach(cb => { cb.checked = !!list[parseInt(cb.dataset.ti)]; }); }
+}
+
+async function loadTime() {
+  buildTzOptions();
+  const r = await api('get_time_settings');
+  if (!r.ok) { toast('Could not load time settings: ' + r.error, 'error'); return; }
+  const d = r.data;
+  if (d.tz) { document.getElementById('tz-auto').checked = !!d.tz.tz_auto; document.getElementById('tz-offset').value = d.tz.tz_off ?? d.tz.tz_offset ?? 0; updateTzManual(); }
+  if (d.hour12) document.getElementById('hour-fmt').value = d.hour12.hour ?? 0;
+  if (d.day) document.getElementById('date-fmt').value = d.day.day ?? 1;
+  if (d.ntp) { document.getElementById('ntp-server').value = d.ntp.ntp || 'pool.ntp.org'; document.getElementById('ntp-interval').value = d.ntp.time_interval ?? 3600; }
+  if (d.font) document.getElementById('disp-font').value = d.font.font ?? 1;
+  if (d.colon) document.getElementById('colon-blink').checked = !!d.colon.colon;
+  if (d.timecolor) {
+    ['h','m','s'].forEach((k,i) => {
+      const v = [d.timecolor.hc, d.timecolor.mc, d.timecolor.sc][i] || '#ffffff';
+      document.getElementById('color-'+k).value = v;
+      document.getElementById('color-'+k+'-hex').textContent = v;
+    });
+  }
+}
+
+async function loadAlbum(forceThumbs = false) {
+  const card = document.getElementById('album-files-card');
+  if (forceThumbs) card.classList.add('pulsing');
+  try {
+    const [alb, files] = await Promise.all([api('get_album_settings'), api('get_file_list')]);
+    if (alb.ok) { document.getElementById('album-interval').value = alb.data.i_i ?? 30; document.getElementById('album-autoplay').checked = !!alb.data.autoplay; }
+    if (files.ok) {
+      await renderFileTable(files.data.files, forceThumbs);
+      const fk = files.data.free_kb;
+      document.getElementById('album-free').textContent = fk != null ? `Free space: ${fk} KB` : '';
+      document.getElementById('album-space').textContent = '';
+    }
+  } finally {
+    card.classList.remove('pulsing');
+  }
+}
+
+async function loadNetwork() {
+  const pcWifi = await api('get_current_pc_wifi');
+  const currentSsid = pcWifi.ok ? (pcWifi.ssid || '') : '';
+  if (currentSsid) document.getElementById('pc-current-wifi').textContent = currentSsid;
+
+  document.getElementById('wifi-lock-en').checked = !!_settings.wifi_lock_enabled;
+  document.getElementById('wifi-lock-interval').value = _settings.wifi_lock_interval || 30;
+
+  // Auto-fill SSID: use saved setting first, fall back to PC's current WiFi
+  const savedSsid = _settings.wifi_lock_ssid || '';
+  document.getElementById('wifi-lock-ssid').value = savedSsid || currentSsid;
+}
+
+async function loadSettings() {
+  document.getElementById('device-ip').value = _settings.device_ip || '';
+  document.getElementById('req-timeout').value = _settings.timeout || 4;
+}
+
+// ══════════════════════════════════════════════════════════
+//  Dashboard actions
+// ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+//  Display actions
+// ══════════════════════════════════════════════════════════
+async function applyNightMode() { const r = await api('set_night_mode', parseInt(document.getElementById('night-t1').value), parseInt(document.getElementById('night-t2').value), parseInt(document.getElementById('night-b1').value), parseInt(document.getElementById('night-b2').value), document.getElementById('night-en').checked?1:0); r.ok?toast('Night mode updated'):toast(r.error,'error'); }
+async function setTheme(t) {
+  const r = await api('set_theme', t);
+  if (r.ok) {
+    document.querySelectorAll('.theme-card').forEach(c => c.classList.toggle('active', parseInt(c.dataset.theme) === t));
+    const names = ['','Weather Today','Weather Forecast','Photo Album','Time 1','Time 2','Time 3','Simple Weather'];
+    const dashTheme = document.getElementById('dash-theme');
+    if (dashTheme) dashTheme.textContent = names[t] || t;
+    toast('Theme applied');
+  } else {
+    toast(r.error, 'error');
+  }
+}
+async function applyThemeSwitch() { const list=Array.from({length:7},(_,i)=>{const cb=document.querySelector(`[data-ti="${i}"]`);return cb&&cb.checked?1:0;}).join(','); const r=await api('set_theme_list',list,document.getElementById('sw-en').checked?1:0,parseInt(document.getElementById('sw-interval').value)); r.ok?toast('Auto-switch updated'):toast(r.error,'error'); }
+
+// ══════════════════════════════════════════════════════════
+//  Time actions
+// ══════════════════════════════════════════════════════════
+function buildTzOptions() { const sel=document.getElementById('tz-offset'); if(sel.options.length)return; for(let m=-720;m<=840;m+=30){const h=Math.floor(Math.abs(m)/60);const min=Math.abs(m)%60;sel.add(new Option(`UTC${m>=0?'+':'-'}${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`,m));} }
+function updateTzManual() { const a=document.getElementById('tz-auto').checked; document.getElementById('tz-manual-row').style.opacity=a?'0.4':'1'; document.getElementById('tz-offset').disabled=a; }
+async function applyTimezone() { const r=await api('set_timezone',document.getElementById('tz-auto').checked?1:0,parseInt(document.getElementById('tz-offset').value)); r.ok?toast('Timezone updated'):toast(r.error,'error'); }
+async function applyFormats() { const r1=await api('set_time_format',parseInt(document.getElementById('hour-fmt').value)); const r2=await api('set_date_format',parseInt(document.getElementById('date-fmt').value)); (r1.ok&&r2.ok)?toast('Format updated'):toast('Error updating format','error'); }
+async function applyNTP() { const r=await api('set_ntp',document.getElementById('ntp-server').value,parseInt(document.getElementById('ntp-interval').value)); r.ok?toast('NTP updated'):toast(r.error,'error'); }
+async function applyDisplayStyle() { const r1=await api('set_font',parseInt(document.getElementById('disp-font').value)); const r2=await api('set_colon',document.getElementById('colon-blink').checked?1:0); (r1.ok&&r2.ok)?toast('Style updated'):toast('Error','error'); }
+async function applyColors() { const r=await api('set_time_colors',document.getElementById('color-h').value,document.getElementById('color-m').value,document.getElementById('color-s').value); r.ok?toast('Colors applied'):toast(r.error,'error'); }
+
+// ══════════════════════════════════════════════════════════
+//  Album actions
+// ══════════════════════════════════════════════════════════
+async function applyAlbumSettings() { const r=await api('set_album_settings',parseInt(document.getElementById('album-interval').value),document.getElementById('album-autoplay').checked?1:0); r.ok?toast('Album settings updated'):toast(r.error,'error'); }
+
+async function openFileDialog() {
+  const r = await api('open_file_dialog');
+  if (!r.ok || !r.files.length) return;
+  _cropMode = 'album';
+  _uploadQueue = r.files;
+  _uploadIdx = 0;
+  showNextCrop();
+}
+
+function renderFileTable(files, forceThumbs = false) {
+  const wrap = document.getElementById('file-table-wrap');
+  if (!files || !files.length) {
+    wrap.innerHTML = '<div class="text-muted" style="padding:8px 0">No images on device yet.</div>';
+    return;
+  }
+  let html = `<table class="file-table">
+    <thead><tr>
+      <th class="col-num">#</th>
+      <th>Preview</th>
+      <th>Name</th>
+      <th class="col-size">Size</th>
+      <th class="col-actions">Actions</th>
+    </tr></thead><tbody>`;
+  files.forEach((f, i) => {
+    const name = typeof f === 'object' ? f.name : f;
+    const sizeKb = typeof f === 'object' ? f.size_kb : null;
+    const ext = name.split('.').pop().toLowerCase();
+    const extBadge = ext === 'gif'
+      ? `<span class="file-ext-gif">GIF</span>`
+      : `<span class="file-ext-jpg">JPG</span>`;
+    const sizeStr = sizeKb != null ? `${sizeKb} KB` : '–';
+    const esc = escHtml(name);
+    html += `<tr>
+      <td class="col-num">${i + 1}</td>
+      <td><div class="gif-thumb-cell" id="photo-thumb-${i}" data-name="${esc}" data-idx="${i}" onclick="retryPhotoThumb(this)" title="Loading…"><span class="gif-thumb-spinner"></span></div></td>
+      <td class="col-name">${esc}${extBadge}</td>
+      <td class="col-size">${sizeStr}</td>
+      <td class="col-actions">
+        <button class="btn btn-primary btn-sm" style="margin-right:5px" data-filename="${esc}" onclick="setDisplayImage(this.dataset.filename, this)">SET</button>
+        <button class="btn btn-danger btn-sm" data-filename="${esc}" onclick="deleteFile(this.dataset.filename)">DELETE</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  return Promise.all(files.map((f, i) => loadPhotoThumb(typeof f === 'object' ? f.name : f, i, forceThumbs, forceThumbs)));
+}
+
+async function loadPhotoThumb(name, i, force = false, pulse = force) {
+  const cell = document.getElementById(`photo-thumb-${i}`);
+  if (!cell) return;
+  cell.classList.remove('gif-thumb-error');
+  if (pulse) cell.classList.add('pulsing');
+  cell.title = 'Loading…';
+  cell.innerHTML = '<span class="gif-thumb-spinner"></span>';
+  const r = await queueDeviceCall(() => api('get_photo_thumb', name, force));
+  const cellNow = document.getElementById(`photo-thumb-${i}`);
+  if (!cellNow || cellNow.dataset.name !== name) return; // list re-rendered under us
+  cellNow.classList.remove('pulsing');
+  if (r.ok) {
+    cellNow.innerHTML = `<img src="${r.dataUrl}" class="gif-thumb-img" alt="${escHtml(name)}" onclick="event.stopPropagation();openThumbLightbox('${r.dataUrl}','${escJ(name)}')">`;
+    cellNow.classList.remove('gif-thumb-error');
+    cellNow.title = 'Click to view full size';
+  } else {
+    cellNow.innerHTML = '<span class="gif-thumb-error-icon">⟳</span>';
+    cellNow.classList.add('gif-thumb-error');
+    cellNow.title = 'Failed to load, click to retry';
+  }
+}
+
+function retryPhotoThumb(cell) {
+  if (!cell.classList.contains('gif-thumb-error')) return;
+  loadPhotoThumb(cell.dataset.name, parseInt(cell.dataset.idx), true);
+}
+
+async function setDisplayImage(filename, btnEl) {
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = '…'; }
+  const r = await api('set_display_image', filename);
+  if (btnEl) { btnEl.disabled = false; btnEl.textContent = 'SET'; }
+  if (r.ok) {
+    toast('Image set: ' + filename);
+  } else {
+    toast('Failed to set image: ' + r.error, 'error');
+  }
+}
+
+async function deleteFile(filename) {
+  if (!await showConfirmModal('Delete Image', `Delete "${filename}"?`, { okLabel: 'Delete', danger: true })) return;
+  const r = await api('delete_file', filename);
+  r.ok ? (toast('Deleted ' + filename), await loadAlbum()) : toast(r.error, 'error');
+}
+
+async function confirmClearAll() {
+  if (!await showConfirmModal('Clear All Images', 'Delete ALL images from device? This cannot be undone.', { okLabel: 'Delete All', danger: true })) return;
+  const r = await api('clear_images');
+  r.ok ? (toast('All images cleared'), await loadAlbum()) : toast(r.error, 'error');
+}
+
+// ══════════════════════════════════════════════════════════
+//  Crop Modal
+// ══════════════════════════════════════════════════════════
+const cropCanvas = document.getElementById('crop-canvas');
+const cropCtx = cropCanvas.getContext('2d');
+const previewCanvas = document.getElementById('crop-preview-canvas');
+const previewCtx = previewCanvas.getContext('2d');
+let _cropImg = new Image();
+
+// Safari/WebKit (used on macOS) can fail to reliably fire the 'load' event
+// when reassigning .src on a reused Image object, and canvas drawImage()
+// on an <img> that was never attached to the DOM can silently keep drawing
+// a stale/blank frame there. This left the crop/GIF preview frozen on Mac
+// while it worked fine on Windows (Chromium/WebView2). Creating a fresh,
+// DOM-attached (but visually hidden) Image per file and confirming
+// readiness via decode() as well as onload fixes it on both engines.
+function _freshCropImg() {
+  if (_cropImg && _cropImg.parentNode) _cropImg.parentNode.removeChild(_cropImg);
+  const img = new Image();
+  img.style.cssText = 'position:absolute;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
+  document.body.appendChild(img);
+  return img;
+}
+
+async function showNextCrop() {
+  if (_uploadIdx >= _uploadQueue.length) {
+    document.getElementById('crop-modal').classList.remove('open');
+    if (_cropImg && _cropImg.parentNode) _cropImg.parentNode.removeChild(_cropImg);
+    if (_cropMode === 'gif') { loadGifList(); } else { await loadAlbum(); }
+    return;
+  }
+  _cropFilePath = _uploadQueue[_uploadIdx];
+  const fname = _cropFilePath.split(/[\\/]/).pop();
+  const isGif = _cropFilePath.toLowerCase().endsWith('.gif');
+  const outSize = _cropMode === 'gif' ? '80×80 GIF' : (isGif ? '240×240 GIF' : '240×240 JPEG');
+  document.getElementById('crop-title').textContent = _cropMode === 'gif' ? 'Crop Weather GIF' : 'Crop Image';
+  document.getElementById('crop-sub').textContent =
+    `File ${_uploadIdx+1} of ${_uploadQueue.length}: ${fname}, output: ${outSize}`;
+  document.getElementById('crop-queue').textContent =
+    _uploadQueue.length > 1 ? `${_uploadQueue.length - _uploadIdx - 1} more after this` : '';
+
+  const r = await api('get_image_data_url', _cropFilePath);
+  if (!r.ok) { toast('Could not load image: ' + r.error, 'error'); _uploadIdx++; showNextCrop(); return; }
+
+  resetAdjustments();
+  const compPanel = document.getElementById('gif-compress-panel');
+  const livePreviewBlock = document.getElementById('gif-live-preview-block');
+  const staticPreviewBlock = document.getElementById('static-preview-block');
+  const isGifFile = _cropFilePath.toLowerCase().endsWith('.gif');
+  if (isGifFile) {
+    compPanel.style.display = 'block';
+    livePreviewBlock.style.display = 'block';
+    // The live device preview already reflects every crop/adjustment/
+    // compression change for GIFs, the static canvas above it would just
+    // be a redundant, less accurate duplicate.
+    staticPreviewBlock.style.display = 'none';
+    const defaultColors = _cropMode === 'gif' ? 16 : 64;
+    const defaultFrames = _cropMode === 'gif' ? 20 : 30;
+    document.getElementById('gif-colors').value = defaultColors;
+    document.getElementById('gif-frames').value = defaultFrames;
+    document.getElementById('gif-colors-val').textContent = defaultColors;
+    document.getElementById('gif-frames-val').textContent = defaultFrames;
+    document.getElementById('gif-compress-stats').textContent = '';
+    document.getElementById('gif-compress-badge').textContent = '–';
+    document.getElementById('gif-compress-badge').style.color = '';
+    document.getElementById('gif-compress-badge').style.background = '';
+    document.getElementById('gif-live-preview').removeAttribute('src');
+    document.getElementById('gif-live-preview-label').textContent = 'Adjust the sliders to see exactly how the device will play this GIF.';
+    _gifPreviewReqId++; // discard any in-flight preview response for the previous file
+    _lastGifPreview = null;
+  } else {
+    compPanel.style.display = 'none';
+    livePreviewBlock.style.display = 'none';
+    // Regular (non-GIF) photo crops have no live device preview, so the
+    // static canvas is still their only way to see the result.
+    staticPreviewBlock.style.display = 'block';
+  }
+  _cropImg = _freshCropImg();
+  let _cropReadyDone = false;
+  const onCropReady = () => {
+    if (_cropReadyDone) return;
+    _cropReadyDone = true;
+    _cropNaturalW = _cropImg.naturalWidth;
+    _cropNaturalH = _cropImg.naturalHeight;
+    document.getElementById('crop-modal').classList.add('open');
+    requestAnimationFrame(() => requestAnimationFrame(() => layoutCropCanvas()));
+  };
+  _cropImg.onload = onCropReady;
+  _cropImg.onerror = () => toast('Could not decode image preview', 'error');
+  _cropImg.src = r.dataUrl;
+  // decode() is the more reliable readiness signal across engines, but not
+  // all browsers support it, so 'load' above still covers those.
+  if (typeof _cropImg.decode === 'function') {
+    _cropImg.decode().then(onCropReady).catch(() => {});
+  }
+}
+
+function layoutCropCanvas() {
+  // Measure available space from the flexible area, not the wrap itself:
+  // the wrap now hugs the canvas tightly (no more gray letterboxing around
+  // portrait/landscape images), so its own size is a result of this
+  // calculation, not an input to it.
+  const area = document.getElementById('crop-canvas-area');
+  const maxW = area.clientWidth - 8;
+  const maxH = area.clientHeight - 8;
+  const ratio = Math.min(maxW / _cropNaturalW, maxH / _cropNaturalH, 1);
+  cropCanvas.width = Math.round(_cropNaturalW * ratio);
+  cropCanvas.height = Math.round(_cropNaturalH * ratio);
+  _scaleX = _cropNaturalW / cropCanvas.width;
+  _scaleY = _cropNaturalH / cropCanvas.height;
+
+  // Default crop: largest centered square
+  const minDim = Math.min(_cropNaturalW, _cropNaturalH);
+  _cropSize = minDim;
+  _cropX = Math.round((_cropNaturalW - minDim) / 2);
+  _cropY = Math.round((_cropNaturalH - minDim) / 2);
+  drawCrop();
+}
+
+function _adjFilter() {
+  const brt = parseFloat(document.getElementById('adj-brt')?.value ?? 1);
+  const con = parseFloat(document.getElementById('adj-con')?.value ?? 1);
+  const sat = parseFloat(document.getElementById('adj-sat')?.value ?? 1);
+  return `brightness(${brt}) contrast(${con}) saturate(${sat})`;
+}
+
+function onAdjust() {
+  const ids = ['adj-brt','adj-con','adj-sat','adj-shp'];
+  const vals = ['adj-brt-val','adj-con-val','adj-sat-val','adj-shp-val'];
+  ids.forEach((id, i) => {
+    document.getElementById(vals[i]).textContent = parseFloat(document.getElementById(id).value).toFixed(1);
+  });
+  drawCrop();
+}
+
+function resetAdjustments() {
+  ['adj-brt','adj-con','adj-sat'].forEach(id => document.getElementById(id).value = 1);
+  document.getElementById('adj-shp').value = 1;
+  onAdjust();
+}
+
+let _gifCompressDebounce = null;
+function onGifCompress() {
+  document.getElementById('gif-colors-val').textContent = document.getElementById('gif-colors').value;
+  document.getElementById('gif-frames-val').textContent = document.getElementById('gif-frames').value;
+  clearTimeout(_gifCompressDebounce);
+  _gifCompressDebounce = setTimeout(fetchGifCompressPreview, 600);
+}
+
+function _gifCompressParams() {
+  const colors = parseInt(document.getElementById('gif-colors').value);
+  const frames = parseInt(document.getElementById('gif-frames').value);
+  const limitOn = document.getElementById('gif-sizelimit-toggle').checked;
+  const targetKb = limitOn ? parseInt(document.getElementById('gif-sizelimit-kb').value) || 0 : 0;
+  const brightness = parseFloat(document.getElementById('adj-brt')?.value ?? 1);
+  const contrast = parseFloat(document.getElementById('adj-con')?.value ?? 1);
+  const saturation = parseFloat(document.getElementById('adj-sat')?.value ?? 1);
+  const sharpness = parseFloat(document.getElementById('adj-shp')?.value ?? 1);
+  return { colors, frames, targetKb, brightness, contrast, saturation, sharpness };
+}
+
+let _gifPreviewReqId = 0;
+let _lastGifPreview = null;
+async function fetchGifCompressPreview() {
+  if (!_cropFilePath || !_cropFilePath.toLowerCase().endsWith('.gif')) return;
+  const { colors, frames, targetKb, brightness, contrast, saturation, sharpness } = _gifCompressParams();
+  const outputSize = _cropMode === 'gif' ? 80 : 240;
+  const stats = document.getElementById('gif-compress-stats');
+  const badge = document.getElementById('gif-compress-badge');
+  const livePreview = document.getElementById('gif-live-preview');
+  const liveLabel = document.getElementById('gif-live-preview-label');
+  stats.textContent = 'Calculating…';
+  if (liveLabel) liveLabel.textContent = 'Rendering device preview...';
+  const reqId = ++_gifPreviewReqId;
+  const r = await queueDeviceCall(() => api(
+    'get_gif_compression_preview', _cropFilePath, colors, frames, targetKb, outputSize,
+    _cropX, _cropY, _cropSize, brightness, contrast, saturation, sharpness
+  ));
+  if (reqId !== _gifPreviewReqId) return; // a newer preview request superseded this one
+  if (!r.ok) { stats.textContent = 'Preview unavailable'; if (liveLabel) liveLabel.textContent = 'Preview unavailable'; return; }
+  _lastGifPreview = r;
+  if (livePreview && r.data_url) {
+    livePreview.src = r.data_url;
+    if (liveLabel) liveLabel.textContent = `Exactly as the device will play it (${outputSize}×${outputSize})`;
+  }
+  const origKB = (r.original_size / 1024).toFixed(1);
+  const compKB = (r.compressed_size / 1024).toFixed(1);
+  const ratio = Math.round((1 - r.compressed_size / r.original_size) * 100);
+  const fitColor = r.will_fit ? 'var(--accent)' : 'var(--danger)';
+  badge.textContent = r.will_fit ? '✓ fits' : '✗ too large';
+  badge.style.color = fitColor;
+  badge.style.background = r.will_fit ? 'var(--accent-dim)' : '#3a1010';
+  let targetNote = '';
+  if (targetKb > 0) {
+    const metColor = r.met_target ? 'var(--accent)' : 'var(--danger)';
+    targetNote = `<span style="color:${metColor}">${r.met_target ? '✓ target met' : '✗ best effort'} (limit: ${targetKb} KB)</span>`;
+  }
+  stats.innerHTML =
+    `<span>${origKB} KB → <strong style="color:var(--text)">${compKB} KB</strong> (−${ratio}%)</span>` +
+    `<span>${r.original_frames} → ${r.output_frames} frames</span>` +
+    (r.free_kb !== null ? `<span style="color:${fitColor}">Device free: ${r.free_kb} KB</span>` : '') +
+    targetNote;
+}
+
+function drawCrop() {
+  const filter = _adjFilter();
+  const dx = _cropX / _scaleX, dy = _cropY / _scaleY;
+  const ds = _cropSize / _scaleX;
+
+  cropCtx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+
+  // Draw full image with adjustments (will be dimmed by overlay)
+  cropCtx.filter = filter;
+  cropCtx.drawImage(_cropImg, 0, 0, cropCanvas.width, cropCanvas.height);
+  cropCtx.filter = 'none';
+
+  // Dim outside crop
+  cropCtx.fillStyle = 'rgba(0,0,0,0.55)';
+  cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
+
+  // Redraw crop region sharp/bright
+  cropCtx.clearRect(dx, dy, ds, ds);
+  cropCtx.filter = filter;
+  cropCtx.drawImage(_cropImg, _cropX, _cropY, _cropSize, _cropSize, dx, dy, ds, ds);
+  cropCtx.filter = 'none';
+
+  // Crop border
+  cropCtx.strokeStyle = '#00d4aa';
+  cropCtx.lineWidth = 2;
+  cropCtx.strokeRect(dx + 1, dy + 1, ds - 2, ds - 2);
+
+  // Corner handles
+  const hs = 10;
+  cropCtx.fillStyle = '#00d4aa';
+  [[dx,dy],[dx+ds-hs,dy],[dx,dy+ds-hs],[dx+ds-hs,dy+ds-hs]].forEach(([hx,hy]) => cropCtx.fillRect(hx, hy, hs, hs));
+
+  // Rule of thirds
+  cropCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+  cropCtx.lineWidth = 1;
+  for (let i = 1; i < 3; i++) {
+    cropCtx.beginPath(); cropCtx.moveTo(dx + ds*i/3, dy); cropCtx.lineTo(dx + ds*i/3, dy+ds); cropCtx.stroke();
+    cropCtx.beginPath(); cropCtx.moveTo(dx, dy + ds*i/3); cropCtx.lineTo(dx+ds, dy + ds*i/3); cropCtx.stroke();
+  }
+
+  // Preview with adjustments
+  previewCtx.clearRect(0, 0, 240, 240);
+  previewCtx.filter = filter;
+  previewCtx.drawImage(_cropImg, _cropX, _cropY, _cropSize, _cropSize, 0, 0, 240, 240);
+  previewCtx.filter = 'none';
+
+  // Info
+  const outLabel = _cropMode === 'gif' ? '80×80 GIF' : '240×240 JPEG';
+  document.getElementById('crop-info').textContent =
+    `Original: ${_cropNaturalW}×${_cropNaturalH}\nCrop: ${Math.round(_cropX)},${Math.round(_cropY)} ${Math.round(_cropSize)}px\nOutput: ${outLabel}`;
+
+  // Crop/adjustment changes also affect the exact GIF the device will play,
+  // so refresh the live device preview too (debounced, same as the sliders).
+  if (_cropFilePath && _cropFilePath.toLowerCase().endsWith('.gif')) {
+    clearTimeout(_gifCompressDebounce);
+    _gifCompressDebounce = setTimeout(fetchGifCompressPreview, 400);
+  }
+}
+
+// Mouse events for drag/resize
+cropCanvas.addEventListener('mousedown', e => {
+  const rect = cropCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const dx = _cropX/_scaleX, dy = _cropY/_scaleY, ds = _cropSize/_scaleX;
+  const hs = 12;
+  // Check resize corners
+  if (mx >= dx+ds-hs && my >= dy+ds-hs) { _resizing = true; return; }
+  // Check drag (inside crop box)
+  if (mx>=dx && mx<=dx+ds && my>=dy && my<=dy+ds) {
+    _dragging = true; _dragOffX = mx - dx; _dragOffY = my - dy;
+  }
+});
+
+cropCanvas.addEventListener('mousemove', e => {
+  if (!_dragging && !_resizing) return;
+  const rect = cropCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const ds = _cropSize / _scaleX;
+  if (_dragging) {
+    _cropX = Math.max(0, Math.min((mx - _dragOffX) * _scaleX, _cropNaturalW - _cropSize));
+    _cropY = Math.max(0, Math.min((my - _dragOffY) * _scaleY, _cropNaturalH - _cropSize));
+  }
+  if (_resizing) {
+    const dx = _cropX / _scaleX, dy = _cropY / _scaleY;
+    const newS = Math.max(20, Math.min((mx - dx) * _scaleX, _cropNaturalW - _cropX, (my - dy) * _scaleY, _cropNaturalH - _cropY));
+    _cropSize = newS;
+  }
+  drawCrop();
+});
+
+cropCanvas.addEventListener('mouseup', () => { _dragging = false; _resizing = false; });
+cropCanvas.addEventListener('mouseleave', () => { _dragging = false; _resizing = false; });
+
+cropCanvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  adjustCropZoom(e.deltaY < 0 ? 1.1 : 0.9);
+}, { passive: false });
+
+function adjustCropZoom(factor) {
+  const cx = _cropX + _cropSize / 2;
+  const cy = _cropY + _cropSize / 2;
+  const minS = Math.min(20, Math.min(_cropNaturalW, _cropNaturalH));
+  const maxS = Math.min(_cropNaturalW, _cropNaturalH);
+  _cropSize = Math.max(minS, Math.min(maxS, _cropSize * factor));
+  _cropX = Math.max(0, Math.min(cx - _cropSize / 2, _cropNaturalW - _cropSize));
+  _cropY = Math.max(0, Math.min(cy - _cropSize / 2, _cropNaturalH - _cropSize));
+  drawCrop();
+}
+
+async function confirmCrop() {
+  if (_cropMode === 'gif' && _lastGifPreview && _lastGifPreview.will_fit === false) {
+    const needKb = Math.round(_lastGifPreview.compressed_size / 1024);
+    const freeKb = _lastGifPreview.free_kb;
+    const cancel = await showConfirmModal(
+      'Not Enough Space',
+      `This GIF is about ${needKb} KB but the device only has ${freeKb} KB free. Uploading it anyway can crash the device. Reduce colors/frames/size limit, or cancel this upload.`,
+      { okLabel: 'Cancel This Upload', danger: true }
+    );
+    if (cancel) return;
+  }
+  document.getElementById('crop-modal').classList.remove('open');
+
+  if (_cropMode === 'gif') {
+    const prog = document.getElementById('gif-upload-progress');
+    const bar  = document.getElementById('gif-upload-bar');
+    const lbl  = document.getElementById('gif-upload-label');
+    prog.style.display = 'block';
+    bar.style.width = '30%';
+    lbl.textContent = 'Processing & uploading…';
+    const adjBrt = parseFloat(document.getElementById('adj-brt').value);
+    const adjCon = parseFloat(document.getElementById('adj-con').value);
+    const adjSat = parseFloat(document.getElementById('adj-sat').value);
+    const adjShp = parseFloat(document.getElementById('adj-shp').value);
+    const { colors: gifColors, frames: gifFrames, targetKb: gifTargetKb } = _gifCompressParams();
+    const r = await api('process_and_upload_gif_crop',
+      _cropFilePath, _cropX, _cropY, _cropSize, _cropNaturalW, _cropNaturalH,
+      adjBrt, adjCon, adjSat, adjShp, gifColors, gifFrames, gifTargetKb);
+    bar.style.width = '100%';
+    if (r.ok) { lbl.textContent = 'Upload complete!'; toast('GIF uploaded'); }
+    else { lbl.textContent = 'Failed: ' + r.error; lbl.style.color = 'var(--danger)'; toast('Upload failed: ' + r.error, 'error'); }
+    setTimeout(() => { prog.style.display = 'none'; bar.style.width = '0'; lbl.style.color = ''; }, 2000);
+    if (r.insufficient_space && await handleInsufficientSpace()) return;
+    _uploadIdx++;
+    if (_uploadIdx < _uploadQueue.length) showNextCrop();
+    else loadGifList();
+    return;
+  }
+
+  const progWrap = document.getElementById('upload-prog-wrap');
+  progWrap.style.display = 'block';
+  document.getElementById('upload-bar').style.width = '10%';
+  document.getElementById('upload-count').textContent = `${_uploadIdx+1}/${_uploadQueue.length}`;
+  document.getElementById('upload-status').textContent = `Processing ${_uploadQueue[_uploadIdx].split(/[\\/]/).pop()}...`;
+
+  const adjBrt = parseFloat(document.getElementById('adj-brt').value);
+  const adjCon = parseFloat(document.getElementById('adj-con').value);
+  const adjSat = parseFloat(document.getElementById('adj-sat').value);
+  const adjShp = parseFloat(document.getElementById('adj-shp').value);
+  const isGifFile = _cropFilePath.toLowerCase().endsWith('.gif');
+  const gifColors = isGifFile ? _gifCompressParams().colors : 256;
+  const gifFrames = isGifFile ? _gifCompressParams().frames : 0;
+  const gifTargetKb = isGifFile ? _gifCompressParams().targetKb : 0;
+  const r = await api('process_and_upload',
+    _cropFilePath, _cropX, _cropY, _cropSize, _cropNaturalW, _cropNaturalH,
+    adjBrt, adjCon, adjSat, adjShp, gifColors, gifFrames, gifTargetKb);
+
+  const pct = Math.round((_uploadIdx + 1) / _uploadQueue.length * 100);
+  document.getElementById('upload-bar').style.width = pct + '%';
+
+  if (r.ok) { toast('Uploaded: ' + r.name); }
+  else { toast('Upload failed: ' + r.error, 'error'); }
+
+  if (r.insufficient_space && await handleInsufficientSpace()) return;
+  _uploadIdx++;
+  if (_uploadIdx < _uploadQueue.length) {
+    showNextCrop();
+  } else {
+    setTimeout(() => { progWrap.style.display='none'; document.getElementById('upload-bar').style.width='0%'; }, 2000);
+    document.getElementById('upload-status').textContent = `Done, ${_uploadQueue.length} file(s) processed`;
+    await loadAlbum();
+  }
+}
+
+function skipCrop() {
+  document.getElementById('crop-modal').classList.remove('open');
+  _uploadIdx++;
+  if (_uploadIdx < _uploadQueue.length) {
+    showNextCrop();
+  } else {
+    if (_cropImg && _cropImg.parentNode) _cropImg.parentNode.removeChild(_cropImg);
+    if (_cropMode === 'gif') loadGifList(); else loadAlbum();
+  }
+}
+
+// Aborts the whole upload queue, not just the file currently being cropped
+// (that's what Skip does). Nothing already uploaded before Cancel is
+// touched, only files not yet processed are dropped.
+function cancelUpload() {
+  document.getElementById('crop-modal').classList.remove('open');
+  if (_cropImg && _cropImg.parentNode) _cropImg.parentNode.removeChild(_cropImg);
+  const remaining = _uploadQueue.length - _uploadIdx;
+  _uploadQueue = [];
+  _uploadIdx = 0;
+  if (remaining > 0) toast(`Upload cancelled${remaining > 1 ? ` (${remaining} files skipped)` : ''}`);
+}
+
+// The backend already refused to send the file (it would not have fit on
+// the device), this just tells the user clearly and offers to drop
+// whatever else is left in the queue instead of blindly grinding through
+// files that likely won't fit either. Returns true if the caller should
+// stop processing the queue.
+async function handleInsufficientSpace() {
+  const remaining = _uploadQueue.length - _uploadIdx - 1;
+  const stopAll = await showConfirmModal(
+    'Not Enough Space on Device',
+    `That file was not uploaded, the device does not have enough free space for it.` +
+    (remaining > 0 ? ` There ${remaining === 1 ? 'is' : 'are'} ${remaining} more file(s) queued, cancel those too?` : ''),
+    { okLabel: remaining > 0 ? 'Cancel Remaining' : 'OK', danger: remaining > 0 }
+  );
+  if (stopAll && remaining > 0) {
+    _uploadQueue = [];
+    _uploadIdx = 0;
+    if (_cropImg && _cropImg.parentNode) _cropImg.parentNode.removeChild(_cropImg);
+    document.getElementById('crop-modal').classList.remove('open');
+    return true;
+  }
+  return false;
+}
+
+// ══════════════════════════════════════════════════════════
+//  Network actions
+// ══════════════════════════════════════════════════════════
+async function scanDeviceWifi() {
+  const list = document.getElementById('device-wifi-list');
+  list.innerHTML = '<div class="text-muted">Scanning…</div>';
+  const r = await api('get_wifi_networks');
+  if (!r.ok) { toast('Scan failed: ' + r.error, 'error'); list.innerHTML = ''; return; }
+  // Device returns {aps: [{ss: ssid, r: signal%}, ...]}
+  const nets = (r.data && r.data.aps) ? r.data.aps : (Array.isArray(r.data) ? r.data : []);
+  if (!nets.length) { list.innerHTML = '<div class="text-muted">No networks found</div>'; return; }
+  list.innerHTML = nets.map(n => {
+    const ssid   = n.ss || n.ssid || '';
+    const signal = n.r  || n.rssi || n.signal || '';
+    const esc    = escHtml(ssid);
+    return `<div class="wifi-item" style="cursor:default">
+      <span class="wifi-ssid" style="cursor:pointer" onclick="document.getElementById('dev-ssid').value=${JSON.stringify(ssid)}" title="Click to fill SSID">${esc}</span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span class="wifi-signal">${signal}${signal ? '%' : ''}</span>
+        <button class="btn btn-secondary btn-sm" style="font-size:10px;padding:2px 8px" data-ssid="${esc}"
+          onclick="fillAndConnect(this.dataset.ssid)">Connect</button>
+      </span>
+    </div>`;
+  }).join('');
+}
+
+async function fillAndConnect(ssid) {
+  document.getElementById('dev-ssid').value = ssid;
+  document.getElementById('dev-pass').focus();
+  toast('SSID filled, enter password if needed, then click Connect Device', 'info');
+}
+
+async function applyDeviceWifi() {
+  const ssid = document.getElementById('dev-ssid').value.trim();
+  if (!ssid) { toast('Enter SSID', 'warn'); return; }
+  const pass = document.getElementById('dev-pass').value;
+  const r = await api('connect_device_wifi', ssid, pass);
+  r.ok ? toast('WiFi credentials sent, device will reconnect') : toast(r.error, 'error');
+}
+
+async function scanPCWifi() {
+  const list = document.getElementById('pc-wifi-list');
+  list.innerHTML = '<div class="text-muted">Scanning...</div>';
+  const r = await api('get_pc_wifi_networks');
+  if (!r.ok) { toast('Scan failed: ' + r.error, 'error'); list.innerHTML = ''; return; }
+  const cur = document.getElementById('pc-current-wifi').textContent;
+  list.innerHTML = r.data.map(n => {
+    const esc = escHtml(n.ssid);
+    const connected = n.ssid === cur;
+    const btn = connected
+      ? `<button class="btn btn-sm" style="font-size:10px;padding:2px 8px;background:#3a1010;color:var(--danger);border:1px solid var(--danger)33" data-name="${esc}" onclick="disconnectPCWifi(this.dataset.name)">Disconnect</button>`
+      : `<button class="btn btn-secondary btn-sm" style="font-size:10px;padding:2px 8px" data-name="${esc}" onclick="connectPCWifi(this.dataset.name)">Connect</button>`;
+    return `<div class="wifi-item${connected ? ' connected' : ''}" style="cursor:default">
+      <span class="wifi-ssid">${esc}</span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span class="wifi-signal">${n.signal}%</span>
+        ${btn}
+      </span>
+    </div>`;
+  }).join('') || '<div class="text-muted">No networks found</div>';
+}
+
+async function connectPCWifi(ssid) {
+  const r = await api('connect_pc_wifi', ssid);
+  if (r.ok) {
+    toast('Connected to ' + ssid);
+    document.getElementById('pc-current-wifi').textContent = ssid;
+    scanPCWifi();
+  } else {
+    toast('Failed: ' + r.error, 'error');
+  }
+}
+
+async function disconnectPCWifi(ssid) {
+  const r = await api('disconnect_pc_wifi');
+  if (r.ok) {
+    toast('Disconnected from ' + ssid);
+  } else {
+    toast('Disconnect sent', 'info');
+  }
+  document.getElementById('pc-current-wifi').textContent = '';
+  scanPCWifi();
+}
+
+async function checkEthAdapters() {
+  const r = await api('get_ethernet_adapters');
+  if (r.ok) document.getElementById('eth-adapter-info').textContent = r.data.length ? 'Ethernet adapters found: ' + r.data.join(', ') : 'No Ethernet adapters detected (or all already disabled)';
+  else document.getElementById('eth-adapter-info').textContent = 'Error: ' + r.error;
+}
+
+async function applyWifiLock() {
+  const r = await api('save_settings', {
+    wifi_lock_enabled: document.getElementById('wifi-lock-en').checked,
+    wifi_lock_ssid: document.getElementById('wifi-lock-ssid').value.trim(),
+    wifi_lock_interval: parseInt(document.getElementById('wifi-lock-interval').value),
+  });
+  r.ok ? toast('WiFi lock settings saved') : toast(r.error, 'error');
+  await pollStatus();
+}
+
+// ══════════════════════════════════════════════════════════
+//  Firmware
+// ══════════════════════════════════════════════════════════
+let _fwVersions = [];
+let _deviceVer = null;
+let _deviceOnline = false;
+
+async function loadFirmware() {
+  document.getElementById('fw-table-wrap').innerHTML = '<div class="text-muted"><span class="spinner"></span> Checking GitHub & local files...</div>';
+  const r = await api('get_firmware_info');
+  if (!r.ok) { document.getElementById('fw-table-wrap').innerHTML = '<div class="text-muted text-danger">Error: ' + r.error + '</div>'; return; }
+
+  _deviceVer = r.device_ver;
+  const devBadge = document.getElementById('fw-device-badge');
+  devBadge.innerHTML = _deviceVer ? `<span class="ver-tag" style="font-size:11px">Device: V${_deviceVer}</span>` : '';
+
+  // Merge local + github by version, keeping track of whether a local (already
+  // downloaded) copy exists separately from the github download metadata, so
+  // the Flash button can be locked until a copy actually sits on this PC.
+  const byVersion = {};
+  for (const fw of r.local) {
+    byVersion[fw.version] = byVersion[fw.version] || {};
+    byVersion[fw.version].local = fw;
+  }
+  for (const fw of r.github) {
+    byVersion[fw.version] = byVersion[fw.version] || {};
+    byVersion[fw.version].github = fw;
+  }
+  _fwVersions = Object.keys(byVersion).map(v => {
+    const entry = byVersion[v];
+    const primary = entry.github || entry.local;
+    return {
+      ...primary,
+      version: v,
+      hasLocal: !!entry.local,
+      localPath: entry.local ? entry.local.path : null,
+      notes: (entry.local && entry.local.notes) || (entry.github && entry.github.notes) || '',
+    };
+  }).sort((a, b) => b.version.localeCompare(a.version, undefined, {numeric: true}));
+
+  if (!_fwVersions.length) {
+    document.getElementById('fw-table-wrap').innerHTML = '<div class="text-muted">No firmware found locally or on GitHub.</div>';
+    return;
+  }
+
+  let html = '<table class="fw-table"><thead><tr><th>Version</th><th>Source</th><th>File</th><th>Action</th></tr></thead><tbody>';
+  for (const fw of _fwVersions) {
+    const isCurrent = _deviceVer && fw.version === _deviceVer;
+    const isNewer = _deviceVer && fw.version.localeCompare(_deviceVer, undefined, {numeric:true}) > 0;
+    const tagCls = isCurrent ? 'current' : (isNewer ? 'newer' : '');
+    const srcCls = fw.source === 'github' ? 'github' : '';
+    const label = isCurrent ? ' (current)' : (isNewer ? ' ✨ newer' : '');
+    html += `<tr data-version="${escHtml(fw.version)}" onclick="showFwNotes('${escJ(fw.version)}', this)" style="cursor:pointer" title="Click to view release notes">
+      <td><span class="ver-tag ${tagCls}">V${fw.version}${label}</span></td>
+      <td><span class="src-badge ${srcCls}">${fw.source}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${fw.filename}</td>
+      <td>${renderFwBtn(fw)}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  document.getElementById('fw-table-wrap').innerHTML = html;
+
+  // Show notes for latest, and mark its row selected so the click affordance is visible
+  if (_fwVersions.length) {
+    const firstRow = document.querySelector(`.fw-table tr[data-version="${CSS.escape(_fwVersions[0].version)}"]`);
+    showFwNotes(_fwVersions[0].version, firstRow);
+  }
+}
+
+function renderFwBtn(fw) {
+  const canFlash = fw.hasLocal && _deviceOnline;
+  let flashTitle;
+  if (!fw.hasLocal) flashTitle = 'Download this firmware before flashing';
+  else if (!_deviceOnline) flashTitle = 'Connect to the device before flashing';
+  else flashTitle = 'Flash this firmware to the device';
+  const flashBtn = `<button class="btn btn-warn btn-sm" ${canFlash ? '' : 'disabled'} title="${escHtml(flashTitle)}" onclick="event.stopPropagation();confirmFlash('${escJ(fw.localPath || '')}','${escJ(fw.filename)}')">Flash</button>`;
+
+  if (!fw.download_url) {
+    // Local-only firmware, nothing to download
+    return flashBtn;
+  }
+  if (fw.hasLocal) {
+    return `<span class="src-badge" style="margin-right:6px">Downloaded</span>${flashBtn}`;
+  }
+  const downloadBtn = `<button class="btn btn-secondary btn-sm" style="margin-right:6px" onclick="event.stopPropagation();downloadOnly('${escJ(fw.download_url)}','${escJ(fw.filename)}','${escJ(fw.version)}')">Download</button>`;
+  return downloadBtn + flashBtn;
+}
+
+function escJ(s) { return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+function showFwNotes(version, rowEl) {
+  const fw = _fwVersions.find(f => f.version === version);
+  if (!fw) return;
+  document.querySelectorAll('.fw-table tr').forEach(tr => tr.classList.remove('selected'));
+  if (rowEl) rowEl.classList.add('selected');
+  document.getElementById('fw-notes-box').textContent = fw.notes || '(no notes available)';
+}
+
+async function downloadOnly(url, filename, version) {
+  startFwProgress();
+  document.getElementById('fw-status-text').textContent = `Downloading ${filename}...`;
+  await api('download_firmware_only', url, filename, version);
+  pollFwProgress('download');
+}
+
+async function manualFirmwareUpload() {
+  const r = await api('open_firmware_file_dialog');
+  if (!r.ok || !r.file) return;
+  confirmFlash(r.file, r.file.split(/[\\/]/).pop());
+}
+
+// ── Flash confirmation modal ────────────────────────────────────────────────
+let _pendingFlash = null;
+
+function confirmFlash(path, filename) {
+  if (!path) { toast('Download this firmware before flashing', 'error'); return; }
+  if (!_deviceOnline) { toast('Connect to the device before flashing', 'error'); return; }
+  _pendingFlash = { path, filename };
+  document.getElementById('flash-confirm-body').innerHTML = `
+    You are about to flash <strong style="color:var(--text)">${escHtml(filename)}</strong> to your device.
+    <ul style="margin:12px 0 0;padding-left:18px;line-height:1.9">
+      <li>Do not change or disconnect your WiFi network</li>
+      <li>Keep the device powered on the whole time</li>
+      <li>Keep this app open until the update finishes</li>
+      <li>The device will reboot automatically when done</li>
+    </ul>
+    <p style="margin:14px 0 0;color:var(--warn)">Interrupting the flash can corrupt the device firmware.</p>
+  `;
+  document.getElementById('flash-confirm-modal').classList.add('open');
+}
+
+function closeFlashConfirm() {
+  document.getElementById('flash-confirm-modal').classList.remove('open');
+  _pendingFlash = null;
+}
+
+async function proceedFlash() {
+  if (!_pendingFlash) return;
+  const { path } = _pendingFlash;
+  closeFlashConfirm();
+  startFwProgress();
+  await api('install_local_firmware', path);
+  pollFwProgress('install');
+}
+
+// ── Generic themed confirm modal (replaces native confirm()) ───────────────
+function showConfirmModal(title, message, { okLabel = 'Confirm', danger = false } = {}) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('generic-confirm-modal');
+    document.getElementById('generic-confirm-title').textContent = title;
+    document.getElementById('generic-confirm-body').textContent = message;
+    const icon = document.getElementById('generic-confirm-icon');
+    icon.textContent = danger ? '×' : '!';
+    icon.style.background = danger ? '#f8514922' : '#d2992222';
+    icon.style.color = danger ? 'var(--danger)' : 'var(--warn)';
+    const okBtn = document.getElementById('generic-confirm-ok');
+    const cancelBtn = document.getElementById('generic-confirm-cancel');
+    okBtn.textContent = okLabel;
+    okBtn.className = 'btn btn-sm ' + (danger ? 'btn-danger' : 'btn-primary');
+    const cleanup = (result) => {
+      modal.classList.remove('open');
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+      resolve(result);
+    };
+    okBtn.onclick = () => cleanup(true);
+    cancelBtn.onclick = () => cleanup(false);
+    modal.classList.add('open');
+  });
+}
+
+// ── Thumbnail lightbox (click a GIF/photo thumb to view it full size) ──────
+function openThumbLightbox(dataUrl, name) {
+  if (!dataUrl) return;
+  document.getElementById('thumb-lightbox-img').src = dataUrl;
+  document.getElementById('thumb-lightbox-caption').textContent = name || '';
+  document.getElementById('thumb-lightbox').classList.add('open');
+}
+function closeThumbLightbox() {
+  document.getElementById('thumb-lightbox').classList.remove('open');
+  document.getElementById('thumb-lightbox-img').src = '';
+}
+
+function startFwProgress() {
+  const wrap = document.getElementById('fw-progress-wrap');
+  wrap.style.display = 'block';
+  document.getElementById('fw-prog-bar').style.width = '0%';
+  document.getElementById('fw-prog-bar').className = 'prog-bar';
+  document.getElementById('fw-status-text').textContent = 'Starting...';
+  document.getElementById('fw-pct-text').textContent = '0%';
+}
+
+function pollFwProgress(mode = 'install') {
+  if (_fwPollTimer) clearInterval(_fwPollTimer);
+  _fwPollTimer = setInterval(async () => {
+    const r = await api('get_fw_download_progress');
+    if (!r.ok) return;
+    const pct = r.progress;
+    document.getElementById('fw-status-text').textContent = r.status || '...';
+    if (pct < 0) {
+      document.getElementById('fw-prog-bar').className = 'prog-bar error';
+      document.getElementById('fw-pct-text').textContent = 'Error';
+      clearInterval(_fwPollTimer);
+      toast((mode === 'download' ? 'Firmware download failed: ' : 'Firmware install failed: ') + r.status, 'error');
+    } else {
+      document.getElementById('fw-prog-bar').style.width = pct + '%';
+      document.getElementById('fw-pct-text').textContent = pct + '%';
+      if (pct >= 100) {
+        clearInterval(_fwPollTimer);
+        if (mode === 'download') {
+          toast('Firmware downloaded, ready to flash');
+          setTimeout(() => document.getElementById('fw-progress-wrap').style.display='none', 2000);
+          loadFirmware();
+        } else {
+          toast('Firmware installed, device is rebooting');
+          setTimeout(() => document.getElementById('fw-progress-wrap').style.display='none', 5000);
+        }
+      }
+    }
+  }, 800);
+}
+
+// ══════════════════════════════════════════════════════════
+//  App Settings
+// ══════════════════════════════════════════════════════════
+async function saveAppSettings() {
+  const r = await api('save_settings', {
+    device_ip: document.getElementById('device-ip').value.trim(),
+    timeout: parseInt(document.getElementById('req-timeout').value),
+  });
+  if (r.ok) { toast('Settings saved'); _settings = await api('get_settings'); await pollStatus(); }
+  else toast(r.error, 'error');
+}
+async function testConnection() {
+  const ip = document.getElementById('device-ip').value.trim();
+  if (!ip) { toast('Enter an IP first', 'warn'); return; }
+  await api('save_settings', { device_ip: ip });
+  const r = await api('ping_device');
+  r.ok ? toast('✓ Connected to ' + ip) : toast('Unreachable: ' + r.error, 'error');
+  await pollStatus();
+}
+async function runDeviceScan() {
+  const btn = document.getElementById('scan-net-btn');
+  const results = document.getElementById('scan-net-results');
+  btn.disabled = true;
+  btn.textContent = 'Scanning…';
+  results.innerHTML = '<div class="text-muted" style="font-size:12px">Scanning your network, this may take 10–20 seconds…</div>';
+  const r = await api('scan_for_device');
+  btn.disabled = false;
+  btn.textContent = 'Scan Now';
+  if (!r.ok) { results.innerHTML = `<div style="color:var(--danger);font-size:12px">${escHtml(r.error)}</div>`; return; }
+  if (!r.found.length) {
+    results.innerHTML = `<div class="text-muted" style="font-size:12px">No device found on subnet${r.subnets.length ? ' ' + r.subnets.join(', ') : ''}. Make sure your PC and device are on the same WiFi.</div>`;
+    return;
+  }
+  results.innerHTML = r.found.map(d => `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${escHtml(d.ip)}</div>
+        <div style="font-size:11px;color:var(--text3)">Firmware: ${escHtml(d.ver)}</div>
+      </div>
+      <button class="btn btn-primary btn-sm" data-ip="${escHtml(d.ip)}" onclick="useScannedIp(this.dataset.ip)">Use this IP</button>
+    </div>`).join('');
+}
+
+async function useScannedIp(ip) {
+  document.getElementById('device-ip').value = ip;
+  await api('save_settings', { device_ip: ip });
+  toast('Device IP set to ' + ip);
+  await pollStatus();
+}
+
+async function confirmReboot() { if(!await showConfirmModal('Reboot Device', 'Reboot the device now?', { okLabel: 'Reboot' }))return; const r=await api('reboot_device'); r.ok?toast('Device rebooting...'):toast(r.error,'error'); }
+async function confirmFactoryReset() { if(!await showConfirmModal('Factory Reset', 'Factory reset? Settings will be wiped (uploaded files kept).', { okLabel: 'Reset', danger: true }))return; const r=await api('factory_reset'); r.ok?toast('Factory reset sent'):toast(r.error,'error'); }
+function refreshPage() { loadPage(currentPage, true); pollStatus(); }
+
+// Re-fetches settings that may have silently failed to load on startup,
+// running one loader at a time so we don't pile concurrent requests onto
+// the single-threaded ESP8266.
+async function refreshAllSettings() {
+  const btn = document.getElementById('refresh-all-btn');
+  const label = document.getElementById('refresh-all-btn-label');
+  if (btn) btn.disabled = true;
+  if (label) label.textContent = 'Syncing...';
+  const steps = [
+    ['Time', loadTime],
+    ['Weather', loadWeatherPage],
+    ['Night Mode / Auto-Switch', loadDisplay],
+  ];
+  const failed = [];
+  for (const [stepLabel, fn] of steps) {
+    try { await fn(); }
+    catch (e) { failed.push(stepLabel); }
+  }
+  await loadDashboard();
+  if (btn) btn.disabled = false;
+  if (label) label.textContent = 'Sync Settings';
+  if (failed.length === 0) toast('All settings refreshed');
+  else toast('Could not refresh: ' + failed.join(', '), 'error');
+}
+
+// ══════════════════════════════════════════════════════════
+//  Drop zone
+// ══════════════════════════════════════════════════════════
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault();
+  dz.classList.remove('drag-over');
+  const dropped = e.dataTransfer && e.dataTransfer.files;
+  if (dropped && dropped.length) {
+    // pywebview can't receive File objects directly, get paths via Python dialog instead,
+    // but signal the user something happened; native DnD path access requires Electron/Tauri.
+    // Fall back to opening the picker pre-populated to the same folder is not possible in
+    // pywebview's sandboxed webview, so we just open the dialog.
+    openFileDialog();
+  }
+});
+
+// ══════════════════════════════════════════════════════════
+//  Init
+// ══════════════════════════════════════════════════════════
+async function init() {
+  _settings = await api('get_settings');
+  await pollStatus();
+  await loadPage('dashboard');
+  setInterval(async () => {
+    _settings = await api('get_settings');
+    await pollStatus();
+    // Only refresh the dashboard's own stat cards while it's actually the
+    // visible page, no point hitting the device for them in the background.
+    if (currentPage === 'dashboard') await loadDashboard();
+  }, 5000);
+}
+// ══════════════════════════════════════════════════════════
+//  Weather
+// ══════════════════════════════════════════════════════════
+async function loadWeather() { await loadWeatherPage(); }
+
+// ── Weather Quick Setup ───────────────────────────────────────────────────────
+
+const REGION_PRESETS = {
+  metric:   { wind: 'km/h',   temp: '°C', pressure: 'hPa',  label: 'Metric (EU/Asia)' },
+  imperial: { wind: 'mile/h', temp: '°F', pressure: 'inHg', label: 'Imperial (US)'     },
+  uk:       { wind: 'mile/h', temp: '°C', pressure: 'hPa',  label: 'UK Style'          },
+  canada:   { wind: 'km/h',   temp: '°C', pressure: 'hPa',  label: 'Canada'            },
+};
+
+let _autoCfgData = null;
+
+const AUTO_CFG_BTN_HTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Detect My Location &amp; Configure';
+
+async function runAutoConfig() {
+  const btn    = document.getElementById('auto-cfg-btn');
+  const status = document.getElementById('auto-cfg-status');
+  const result = document.getElementById('auto-cfg-result');
+  btn.disabled = true;
+  btn.textContent = 'Detecting…';
+  status.textContent = 'Detecting your location via IP…';
+  status.style.color = 'var(--text2)';
+  result.style.display = 'none';
+
+  let r;
+  try {
+    r = await api('auto_detect_location');
+  } catch (e) {
+    r = { ok: false, error: String(e) };
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = AUTO_CFG_BTN_HTML;
+  }
+
+  if (!r || !r.ok) {
+    status.textContent = 'Detection failed: ' + (r ? r.error : 'unknown error') + ', use the region buttons below instead.';
+    status.style.color = 'var(--danger)';
+    return;
+  }
+
+  const preset = REGION_PRESETS[r.preset];
+  _autoCfgData = { city: r.city, country: r.country, preset: r.preset, units: preset };
+
+  // Show preview panel
+  document.getElementById('auto-cfg-rows').innerHTML = `
+    <span style="color:var(--text2)">City</span>       <strong style="color:var(--text)">${escHtml(r.city)}, ${escHtml(r.country)}</strong>
+    <span style="color:var(--text2)">Temperature</span> <strong style="color:var(--text)">${escHtml(preset.temp)}</strong>
+    <span style="color:var(--text2)">Wind speed</span>  <strong style="color:var(--text)">${escHtml(preset.wind)}</strong>
+    <span style="color:var(--text2)">Pressure</span>    <strong style="color:var(--text)">${escHtml(preset.pressure)}</strong>
+    <span style="color:var(--text2)">Update every</span><strong style="color:var(--text)">20 min</strong>
+  `;
+  result.style.display = 'block';
+  status.textContent = '';
+}
+
+async function commitAutoConfig() {
+  if (!_autoCfgData) return;
+  const saveBtn = document.getElementById('auto-cfg-save-btn');
+  const status  = document.getElementById('auto-cfg-status');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Applying…';
+
+  const { city, units, preset } = _autoCfgData;
+  const steps = [
+    api('set_weather_city',  city),
+    api('set_weather_units', units.wind, units.temp, units.pressure),
+    api('set_weather_interval', 20),
+  ];
+  const results = await Promise.all(steps);
+  const failed  = results.filter(r => !r.ok);
+
+  // Sync form fields to match
+  document.getElementById('weather-city').value = city;
+  setSelectValue('unit-wind',     units.wind);
+  setSelectValue('unit-temp',     units.temp);
+  setSelectValue('unit-pressure', units.pressure);
+  document.getElementById('weather-interval').value = 20;
+
+  saveBtn.disabled = false;
+  saveBtn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Apply All to Device';
+
+  if (failed.length === 0) {
+    document.getElementById('auto-cfg-result').style.display = 'none';
+    status.textContent = '✓ All settings applied, ' + city + ', ' + units.temp + ' / ' + units.wind;
+    status.style.color = 'var(--success)';
+    toast('Weather auto-configured for ' + city);
+  } else {
+    status.textContent = failed.length + ' setting(s) failed: ' + failed.map(r => r.error).join(', ');
+    status.style.color = 'var(--danger)';
+  }
+  _autoCfgData = null;
+}
+
+async function applyRegionPreset(key) {
+  const p = REGION_PRESETS[key];
+  if (!p) return;
+  const status = document.getElementById('region-preset-status');
+  status.textContent = 'Saving…';
+  status.style.color = 'var(--text2)';
+  setSelectValue('unit-wind', p.wind);
+  setSelectValue('unit-temp', p.temp);
+  setSelectValue('unit-pressure', p.pressure);
+  const r = await api('set_weather_units', p.wind, p.temp, p.pressure);
+  if (r.ok) {
+    status.textContent = '✓ ' + p.label + ' units saved to device';
+    status.style.color = 'var(--success)';
+    toast('Units set: ' + p.temp + ' / ' + p.wind);
+  } else {
+    status.textContent = 'Save failed: ' + r.error;
+    status.style.color = 'var(--danger)';
+  }
+}
+
+async function loadWeatherPage() {
+  const r = await api('get_weather_config');
+  if (!r.ok) return;
+  const d = r.data;
+  if (d.city && d.city.city) document.getElementById('weather-city').value = d.city.city;
+  if (d.w_i && d.w_i.w_i) document.getElementById('weather-interval').value = d.w_i.w_i;
+  if (d.unit) {
+    const u = d.unit;
+    if (u.w_u) setSelectValue('unit-wind', u.w_u);
+    if (u.t_u) setSelectValue('unit-temp', u.t_u);
+    if (u.p_u) setSelectValue('unit-pressure', u.p_u);
+  }
+  if (d.key  && d.key.key)  document.getElementById('weather-apikey').value = d.key.key;
+  if (d.fkey && d.fkey.fkey) document.getElementById('weather-fkey').value = d.fkey.fkey;
+  loadGifList();
+}
+
+function setSelectValue(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  for (const opt of el.options) { if (opt.value === val) { el.value = val; return; } }
+}
+
+async function applyWeatherCity() {
+  const city = document.getElementById('weather-city').value.trim();
+  if (!city) { toast('Enter a city name or ID', 'warn'); return; }
+  const r = await api('set_weather_city', city);
+  const status = document.getElementById('weather-city-status');
+  if (r.ok) {
+    toast('City saved: ' + city);
+    status.textContent = '✓ Saved, device will refresh weather on next cycle';
+    status.style.color = 'var(--success)';
+  } else {
+    toast('Error: ' + r.error, 'error');
+    status.textContent = r.error;
+    status.style.color = 'var(--danger)';
+  }
+}
+
+async function applyWeatherUnits() {
+  const wind     = document.getElementById('unit-wind').value;
+  const temp     = document.getElementById('unit-temp').value;
+  const pressure = document.getElementById('unit-pressure').value;
+  const r = await api('set_weather_units', wind, temp, pressure);
+  r.ok ? toast('Units saved') : toast('Error: ' + r.error, 'error');
+}
+
+async function applyWeatherInterval() {
+  const minutes = parseInt(document.getElementById('weather-interval').value) || 20;
+  const r = await api('set_weather_interval', minutes);
+  r.ok ? toast('Update interval set to ' + minutes + ' min') : toast('Error: ' + r.error, 'error');
+}
+
+async function applyWeatherApiKey() {
+  const key = document.getElementById('weather-apikey').value.trim();
+  const r = await api('set_weather_apikey', key);
+  r.ok ? toast(key ? 'API key saved' : 'API key cleared, device will use built-in shared key') : toast('Error: ' + r.error, 'error');
+}
+
+async function clearWeatherApiKey() {
+  const r = await api('set_weather_apikey', '');
+  if (r.ok) { document.getElementById('weather-apikey').value = ''; toast('API key cleared, device will use built-in shared key'); }
+  else toast('Error: ' + r.error, 'error');
+}
+
+async function applyWeatherForecastKey() {
+  const key = document.getElementById('weather-fkey').value.trim();
+  const r = await api('set_weather_forecast_key', key);
+  r.ok ? toast(key ? 'Forecast key saved' : 'Forecast key cleared, device will use built-in shared key') : toast('Error: ' + r.error, 'error');
+}
+
+async function clearWeatherForecastKey() {
+  const r = await api('set_weather_forecast_key', '');
+  if (r.ok) { document.getElementById('weather-fkey').value = ''; toast('Forecast key cleared, device will use built-in shared key'); }
+  else toast('Error: ' + r.error, 'error');
+}
+
+// ── Weather GIF animations ────────────────────────────────────────────────────
+
+async function loadGifList(forceThumbs = false) {
+  const card = document.getElementById('weather-gif-card');
+  if (forceThumbs) card.classList.add('pulsing');
+  try {
+    const wrap = document.getElementById('gif-file-table-wrap');
+    wrap.innerHTML = '<p class="text-muted" style="font-size:12px">Loading…</p>';
+    const r = await api('get_gif_list');
+    if (!r.ok) { wrap.innerHTML = '<p class="text-muted" style="color:var(--danger);font-size:12px">Error: ' + r.error + '</p>'; return; }
+    const { files, free_kb } = r.data;
+    if (free_kb !== null && free_kb !== undefined) {
+      document.getElementById('gif-free-space').textContent = 'Free space: ' + free_kb + ' KB';
+    }
+    if (!files || files.length === 0) {
+      wrap.innerHTML = '<p class="text-muted" style="font-size:12px">No GIFs uploaded yet.</p>';
+      return;
+    }
+    let html = '<table class="file-table"><thead><tr><th>#</th><th>Preview</th><th>Name</th><th>Size</th><th>Set</th><th>Delete</th></tr></thead><tbody>';
+    files.forEach((f, i) => {
+      const sizeKB = f.size_kb != null ? f.size_kb + ' KB' : '–';
+      html += `<tr>
+        <td style="color:var(--text2)">${i+1}</td>
+        <td><div class="gif-thumb-cell" id="gif-thumb-${i}" data-name="${escHtml(f.name)}" data-idx="${i}" onclick="retryGifThumb(this)" title="Loading…"><span class="gif-thumb-spinner"></span></div></td>
+        <td><span class="file-badge" style="background:#7c3aed22;color:#a78bfa;border-color:#7c3aed44">GIF</span> ${escHtml(f.name)}</td>
+        <td style="color:var(--text2)">${sizeKB}</td>
+        <td><button class="btn btn-primary btn-sm" style="padding:2px 8px" data-name="${escHtml(f.name)}" onclick="setWeatherGif(this.dataset.name)">SET</button></td>
+        <td><button class="btn btn-danger btn-sm" style="padding:2px 8px" data-name="${escHtml(f.name)}" onclick="deleteGif(this.dataset.name)">DEL</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+    await Promise.all(files.map((f, i) => loadGifThumb(f.name, i, forceThumbs, forceThumbs)));
+  } finally {
+    card.classList.remove('pulsing');
+  }
+}
+
+async function loadGifThumb(name, i, force = false, pulse = force) {
+  const cell = document.getElementById(`gif-thumb-${i}`);
+  if (!cell) return;
+  cell.classList.remove('gif-thumb-error');
+  if (pulse) cell.classList.add('pulsing');
+  cell.title = 'Loading…';
+  cell.innerHTML = '<span class="gif-thumb-spinner"></span>';
+  const r = await queueDeviceCall(() => api('get_gif_thumb', name, force));
+  const cellNow = document.getElementById(`gif-thumb-${i}`);
+  if (!cellNow || cellNow.dataset.name !== name) return; // list re-rendered under us
+  cellNow.classList.remove('pulsing');
+  if (r.ok) {
+    cellNow.innerHTML = `<img src="${r.dataUrl}" class="gif-thumb-img" alt="${escHtml(name)}" onclick="event.stopPropagation();openThumbLightbox('${r.dataUrl}','${escJ(name)}')">`;
+    cellNow.classList.remove('gif-thumb-error');
+    cellNow.title = 'Click to view full size';
+  } else {
+    cellNow.innerHTML = '<span class="gif-thumb-error-icon">⟳</span>';
+    cellNow.classList.add('gif-thumb-error');
+    cellNow.title = 'Failed to load, click to retry';
+  }
+}
+
+function retryGifThumb(cell) {
+  if (!cell.classList.contains('gif-thumb-error')) return;
+  loadGifThumb(cell.dataset.name, parseInt(cell.dataset.idx), true);
+}
+
+async function setWeatherGif(filename) {
+  const r = await api('set_weather_gif', filename);
+  r.ok ? toast('GIF set: ' + filename) : toast('Failed to set GIF: ' + r.error, 'error');
+}
+
+async function deleteGif(filename) {
+  if (!await showConfirmModal('Delete GIF', 'Delete GIF: ' + filename + '?', { okLabel: 'Delete', danger: true })) return;
+  const r = await api('delete_gif', filename);
+  if (r.ok) { toast('Deleted ' + filename); loadGifList(); }
+  else toast('Error: ' + r.error, 'error');
+}
+
+async function clearAllGifs() {
+  if (!await showConfirmModal('Clear All GIFs', 'Delete ALL weather GIFs from device?', { okLabel: 'Delete All', danger: true })) return;
+  const r = await api('clear_gifs');
+  if (r.ok) { toast('All GIFs cleared'); loadGifList(); }
+  else toast('Error: ' + r.error, 'error');
+}
+
+async function browseWeatherGif() {
+  const r = await api('open_file_dialog');
+  if (!r || !r.ok || !r.files || !r.files.length) return;
+  _cropMode = 'gif';
+  _uploadQueue = r.files;
+  _uploadIdx = 0;
+  showNextCrop();
+}
+
+
+window.addEventListener('pywebviewready', init);
+if (window.pywebview && !window.pywebview._initDone) { window.pywebview._initDone = true; init(); }
+</script>
+</body>
+</html>
